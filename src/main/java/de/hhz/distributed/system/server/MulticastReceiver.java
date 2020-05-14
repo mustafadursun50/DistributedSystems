@@ -40,6 +40,7 @@ public class MulticastReceiver implements Runnable {
 				this.group, ApplicationConstants.MULTICAST_PORT);
 		try {
 			this.mMulticastSocket.send(msgPacket);
+			System.out.println("MulticastSend to port: " + portAsString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -51,6 +52,7 @@ public class MulticastReceiver implements Runnable {
 				this.group, ApplicationConstants.MULTICAST_PORT);
 		try {
 			this.mMulticastSocket.send(msgPacket);
+			System.out.println("First Multicast Send to port: " + portAsString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -70,8 +72,9 @@ public class MulticastReceiver implements Runnable {
 					String myHost = packet.getAddress().getHostAddress() + ":" + receivedMsg;
 					if (!knownHosts.contains(myHost)) {
 						knownHosts.add(myHost);
+						sendMulticastMessage(uuid, packet);
 					}
-					sendMulticastMessage(uuid, packet);
+
 				}
 			}
 		} catch (Exception e) {
