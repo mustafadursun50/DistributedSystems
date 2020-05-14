@@ -34,25 +34,13 @@ public class MulticastReceiver implements Runnable {
 		this.mMulticastSocket.close();
 	}
 
-	private void sendMulticastMessage(String msg, DatagramPacket paket) {
-		String portAsString = String.valueOf(this.port);
-		DatagramPacket msgPacket = new DatagramPacket(portAsString.getBytes(), portAsString.getBytes().length,
-				this.group, ApplicationConstants.MULTICAST_PORT);
-		try {
-			this.mMulticastSocket.send(msgPacket);
-			System.out.println("MulticastSend to port: " + portAsString);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-
 	public void sendMulticastMessage() {
 		String portAsString = String.valueOf(this.port);
 		DatagramPacket msgPacket = new DatagramPacket(portAsString.getBytes(), portAsString.getBytes().length,
 				this.group, ApplicationConstants.MULTICAST_PORT);
 		try {
 			this.mMulticastSocket.send(msgPacket);
-			System.out.println("First Multicast Send to port: " + portAsString);
+			System.out.println("send multicast msg from port: " + portAsString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -72,7 +60,7 @@ public class MulticastReceiver implements Runnable {
 					String myHost = packet.getAddress().getHostAddress() + ":" + receivedMsg;
 					if (!knownHosts.contains(myHost)) {
 						knownHosts.add(myHost);
-						sendMulticastMessage(uuid, packet);
+						sendMulticastMessage();
 					}
 
 				}
