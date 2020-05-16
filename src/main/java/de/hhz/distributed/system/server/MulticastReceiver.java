@@ -8,7 +8,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import de.hhz.distributed.system.app.ApplicationConstants;
+import de.hhz.distributed.system.app.Constants;
 
 public class MulticastReceiver implements Runnable {
 	private MulticastSocket mMulticastSocket;
@@ -17,11 +17,11 @@ public class MulticastReceiver implements Runnable {
 	private String uuid;
 	private int port;
 
-	List<String> knownHosts = new ArrayList<String>();
+	public List<String> knownHosts = new ArrayList<String>();
 
 	public MulticastReceiver(String uuid, int port) {
 		try {
-			group = InetAddress.getByName(ApplicationConstants.MULTICAST_ADDRESS);
+			group = InetAddress.getByName(Constants.MULTICAST_ADDRESS);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -37,10 +37,10 @@ public class MulticastReceiver implements Runnable {
 	public void sendMulticastMessage() {
 		String portAsString = String.valueOf(this.port);
 		DatagramPacket msgPacket = new DatagramPacket(portAsString.getBytes(), portAsString.getBytes().length,
-				this.group, ApplicationConstants.MULTICAST_PORT);
+				this.group, Constants.MULTICAST_PORT);
 		try {
 			this.mMulticastSocket.send(msgPacket);
-			System.out.println("send multicast msg from port: " + portAsString);
+		//	System.out.println("send multicast msg from port: " + portAsString);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -48,7 +48,7 @@ public class MulticastReceiver implements Runnable {
 
 	public void run() {
 		try {
-			mMulticastSocket = new MulticastSocket(ApplicationConstants.MULTICAST_PORT);
+			mMulticastSocket = new MulticastSocket(Constants.MULTICAST_PORT);
 			mMulticastSocket.joinGroup(group);
 			mMulticastSocket.setLoopbackMode(false);
 			mMulticastSocket.setTimeToLive(1);
@@ -62,7 +62,6 @@ public class MulticastReceiver implements Runnable {
 						knownHosts.add(myHost);
 						sendMulticastMessage();
 					}
-
 				}
 			}
 		} catch (Exception e) {
