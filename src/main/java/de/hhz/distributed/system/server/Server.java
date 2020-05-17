@@ -47,7 +47,7 @@ public class Server implements Runnable {
 	      };
 	      
 	      ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-	      // For frist run wait 5 sec. And then periodically every 10 sec.
+	      // Ping Configuration: For first run wait 5 sec. And then periodically every 10 sec.
 	      service.scheduleAtFixedRate(runnable, 5, 10, TimeUnit.SECONDS);
 
 	 }

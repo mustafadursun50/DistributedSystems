@@ -28,7 +28,7 @@ public class App {
 		}
 		
 		Thread.sleep(300);
-		
+		//Zur Beginn: letzte Server wird direkt Leader gewählt. Kann später mit LeadElector Logik abgelöst werden.
 		server.isLeader = true;
 		server.sendMulticastMessage();
 	}

@@ -39,10 +39,9 @@ public class MessageHandler implements Runnable {
 				String incommingMsg = (String) mObjectInputStream.readObject();
 				
 				if(incommingMsg.equals(Constants.PING_LEADER_TO_REPLICA)) {
+					System.out.println("received: " + incommingMsg);
 					FailureDedector.updateLastOkayTime();
 				}
-				
-				System.out.println("received: " + incommingMsg);
 				
 				mObjectInputStream.close();
 				socket.close();

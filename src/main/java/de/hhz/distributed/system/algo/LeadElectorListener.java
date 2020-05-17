@@ -15,7 +15,12 @@ public class LeadElectorListener implements PropertyChangeListener {
 		this.failureDedector.addChangeListener(this);
 	}
 
+	/**
+	 * Listening for StartLeadElectionEvent from FailureDedector.java
+	 */
 	public void propertyChange(PropertyChangeEvent evt) {
+		
+		System.out.println(evt.getPropertyName() + " occurred -> start..");
 		LeadElector.runLeadElection();
 	}
 }
