@@ -17,11 +17,14 @@ public class App {
 
 		for (int i = 0; i < ApplicationConstants.NUMBER_OF_SERVERS; i++) {
 			server = new Server(ApplicationConstants.SERVER_PORT_START++,
-					String.valueOf(ApplicationConstants.SERVER_UUID_START++));
+					ApplicationConstants.SERVER_UUID_START++);
 			new Thread(server).start();
 		}
 		Thread.sleep(300);
 
 		server.sendMulticastMessage();
+		Thread.sleep(300);
+
+		server.initiateVoting();
 	}
 }
