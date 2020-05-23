@@ -7,28 +7,62 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
-import java.util.UUID;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import de.hhz.distributed.system.app.ApplicationConstants;
+import de.hhz.distributed.system.algo.LeadElector;
+import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.handlers.MessageHandler;
 
 public class Server implements Runnable {
-	private static final String LCR_PREFIX = "LCR";
-	private static final String MESSAGE_SEPARATOR = ":";
-	private static final Object MESSAGE_COOR = "COOR";
 	private ServerSocket mServerSocket;
 	private Socket mSocket;
 	private int uid;
 	private MulticastReceiver mMulticastReceiver;
 	private InetAddress host = InetAddress.getLocalHost();
 	private int port;
-	int leadUid;
+	private LeadElector mElector;
 
-	public Server(final int port, final int uid) throws IOException {
+	private int leadUid;
+	private boolean isLeader;
+
+	public Server(final int port, final int uid) throws IOException, ClassNotFoundException {
+
 		this.mServerSocket = new ServerSocket(port);
 		this.uid = uid;
 		this.port = port;
+		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
+		this.mElector = new LeadElector(this);
 		System.out.println("Server UID " + uid + " listing on " + this.host.getHostAddress() + ":" + this.port);
+
+		doPing();
+	}
+/**
+ * Leader send ping to replicas
+ */
+	public void doPing() {
+		Runnable runnable = new Runnable() {
+			public void run() {
+				try {
+					if (isLeader) {
+						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
+							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+							int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+							sendMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
+						}
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		};
+
+		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
+		// Ping Configuration: For first run wait 5 sec. And then periodically every 10
+		// sec.
+		service.scheduleAtFixedRate(runnable, 5, 10, TimeUnit.SECONDS);
+
 	}
 
 	private synchronized void sendMessage(final String message) throws IOException {
@@ -40,7 +74,8 @@ public class Server implements Runnable {
 
 	private String readMessage() throws IOException, ClassNotFoundException {
 		ObjectInputStream mObjectInputStream = new ObjectInputStream(this.mSocket.getInputStream());
-		return (String) mObjectInputStream.readObject();
+		String s = (String) mObjectInputStream.readObject();
+		return s;
 	}
 
 	public void close() throws IOException {
@@ -61,114 +96,71 @@ public class Server implements Runnable {
 		Socket socket = new Socket(hostAddress, port);
 		ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 		mObjectOutputStream.writeObject(message);
-//		ObjectInputStream mObjectInputStream = new ObjectInputStream(socket.getInputStream());
-//		String received = (String) mObjectInputStream.readObject();
-//		System.out.println("server " + uid + " recv " + received);
 		mObjectOutputStream.flush();
 		mObjectOutputStream.close();
-//		mObjectInputStream.close();
 		socket.close();
 	}
-
+/**
+ * Handle incoming messages
+ */
 	public void run() {
-		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		new Thread(this.mMulticastReceiver).start();
 		while (true) {
 			try {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
-				// LCR message
-				if (input.startsWith(LCR_PREFIX)) {
-					this.handleLCRMessage(input);
+				if (input.startsWith(LeadElector.LCR_PREFIX)) {
+					mSocket.close();
+					this.mElector.handleVoting(input);
+				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
+					mSocket.close();
+					FailureDedector.updateLastOkayTime();
 				} else {
+					System.out.println("client connection accepted");
 					new Thread(new MessageHandler(mSocket)).start();
-
 				}
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
-
-	}
-
-	/**
-	 * Initiate LCR
-	 * 
-	 * @throws NumberFormatException
-	 * @throws ClassNotFoundException
-	 * @throws IOException
-	 */
-	public void initiateVoting() throws NumberFormatException, ClassNotFoundException, IOException {
-		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-		if (neihborProps == null) {
-			System.out.println("Server has no neihbor");
-			return;
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append(LCR_PREFIX);
-		sb.append(MESSAGE_SEPARATOR);
-		sb.append(this.uid);
-		System.out.println("Server UID " + this.uid + " initiate voting");
-
-		this.sendMessage(sb.toString(), neihborProps.get(ApplicationConstants.PROPERTY_HOST_ADDRESS).toString(),
-				Integer.parseInt(neihborProps.get(ApplicationConstants.PROPERTY_HOST_PORT).toString()));
-
-	}
-
-	public void handleLCRMessage(String input) throws NumberFormatException, ClassNotFoundException, IOException {
-		int recvUid = -1;
-		StringBuilder sb = new StringBuilder();
-		boolean isCoorinationMsg = false;
-		System.out.println("Server UID " + this.uid + " Recv " + input);
-
-		if (input.split(MESSAGE_SEPARATOR).length > 1) {
-			recvUid = Integer.parseInt(input.split(MESSAGE_SEPARATOR)[1]);
-		}
-		if (input.split(MESSAGE_SEPARATOR).length == 3) {
-			isCoorinationMsg = true;
-		}
-		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-//server should declare itself as coordinator or received coordination message
-		if ((recvUid == this.uid) || isCoorinationMsg) {
-			// The coordination message was initiated by this server. End message
-			// transmission.
-			if (recvUid == this.uid && isCoorinationMsg) {
-				return;
-			}
-			this.leadUid = recvUid;
-			sb = new StringBuilder();
-			sb.append(LCR_PREFIX);
-			sb.append(MESSAGE_SEPARATOR);
-			// Coordination message received. Forward the message to neihbor
-			if (isCoorinationMsg) {
-				sb.append(recvUid);
-			} else {
-				// Server declare itself as coordinator
-				sb.append(this.uid);
-				System.out.println(
-						" Election completed. Server UID " + this.uid + " won. Now send COOR to anothers servers");
-			}
-			sb.append(MESSAGE_SEPARATOR);
-			sb.append(MESSAGE_COOR);
-			String host = neihborProps.get(ApplicationConstants.PROPERTY_HOST_ADDRESS).toString();
-			int port = Integer.parseInt(neihborProps.get(ApplicationConstants.PROPERTY_HOST_PORT).toString());
-			this.sendMessage(sb.toString(), host, port);
-		} else if (recvUid > this.uid) {
-			// Forward message to neihbor
-			if (neihborProps != null) {
-				sb = new StringBuilder();
-				sb.append(LCR_PREFIX);
-				sb.append(MESSAGE_SEPARATOR);
-				sb.append(recvUid);
-				this.sendMessage(sb.toString(), neihborProps.get(ApplicationConstants.PROPERTY_HOST_ADDRESS).toString(),
-						Integer.parseInt(neihborProps.get(ApplicationConstants.PROPERTY_HOST_PORT).toString()));
-			}
-		}
-
 	}
 
 	public void sendMulticastMessage() {
 		this.mMulticastReceiver.sendMulticastMessage();
+	}
+
+	public void startVoting() {
+		try {
+			mElector.initiateVoting();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public int getLeadUid() {
+		return leadUid;
+	}
+
+	public void setLeadUid(int leadUid) {
+		this.leadUid = leadUid;
+	}
+
+	public void setIsLeader(boolean isLeader) {
+		this.isLeader = isLeader;
+	}
+
+	public int getUid() {
+		return this.uid;
+	}
+
+	public MulticastReceiver getMulticastReceiver() {
+		return this.mMulticastReceiver;
+	}
+
+	public boolean isLeader() {
+		return this.isLeader;
 	}
 
 }
