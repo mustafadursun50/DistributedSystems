@@ -39,7 +39,7 @@ public class Server implements Runnable {
 		doPing();
 	}
 /**
- * Leader send ping to replicas
+ * Leader send ping to replicas and say's i am here.
  */
 	public void doPing() {
 		Runnable runnable = new Runnable() {

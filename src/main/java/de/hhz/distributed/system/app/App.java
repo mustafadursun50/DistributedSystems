@@ -16,7 +16,7 @@ public class App {
 		
 		FailureDedector failureDedector = new FailureDedector();
 		new Thread(failureDedector).start();
-		new LeadElectorListener(failureDedector,servers);
+		new LeadElectorListener(failureDedector, servers);
 	}
 
 	public List<Server> generateServers() throws IOException, ClassNotFoundException, InterruptedException {
@@ -31,7 +31,6 @@ public class App {
 		}
 		
 		Thread.sleep(300);
-		//Zur Beginn: letzte Server wird direkt Leader gewählt. Kann später mit LeadElector Logik abgelöst werden.
 		server.sendMulticastMessage();
 //		Thread.sleep(300);
 //		server.startVoting();

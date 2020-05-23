@@ -65,7 +65,7 @@ public class LeadElector {
 			isCoorinationMsg = true;
 		}
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-//server should declare itself as coordinator or received coordination message
+		//server should declare itself as coordinator or received coordination message
 		if ((recvUid == mServer.getUid()) || isCoorinationMsg) {
 			// The coordination message was initiated by this server. End message
 			// transmission.
