@@ -57,7 +57,6 @@ public class Server implements Runnable {
 				}
 			}
 		};
-
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		// Ping Configuration: For first run wait 5 sec. And then periodically every 10
 		// sec.

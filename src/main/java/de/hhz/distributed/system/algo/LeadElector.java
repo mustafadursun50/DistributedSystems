@@ -93,19 +93,25 @@ public class LeadElector {
 			this.mServer.sendMessage(sb.toString(), host, port);
 		} else if (recvUid > this.mServer.getUid()) {
 			// Forward message to neihbor
-			if (neihborProps != null) {
 				sb = new StringBuilder();
 				sb.append(LCR_PREFIX);
 				sb.append(MESSAGE_SEPARATOR);
 				sb.append(recvUid);
 				this.mServer.sendMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 						Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
-			}
+			
+		}else {
+			// Forward message to own uid
+			sb = new StringBuilder();
+			sb.append(LCR_PREFIX);
+			sb.append(MESSAGE_SEPARATOR);
+			sb.append(mServer.getUid());
+			this.mServer.sendMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
+					Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
+		
+
 		}
 
 	}
 
-	public static void runLeadElection() {
-
-	}
 }

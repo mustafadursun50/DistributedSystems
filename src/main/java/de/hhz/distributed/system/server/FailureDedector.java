@@ -34,7 +34,6 @@ public class FailureDedector implements Runnable {
 	}
 	
     private void notifyLeadElector() {
-    	System.out.println("Warning last successfully ping was at: "+ lastOkay);
         for (PropertyChangeListener name : leadElectorListener) {
             name.propertyChange(new PropertyChangeEvent(this, "StartLeadElectionEvent", "", ""));
         }
