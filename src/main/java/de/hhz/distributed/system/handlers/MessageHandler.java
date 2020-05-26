@@ -33,7 +33,7 @@ public class MessageHandler implements Runnable {
 		// 4. Send / Receive Data
 		try {
 			PrintWriter out = new PrintWriter(mSocket.getOutputStream(), true);
-			out.println("Choose one: banana, milk");
+			out.println("Choose one: banana, milk, tometo");
 			out.println("------------------------------");
 			BufferedReader input = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
 			String clientInput = input.readLine();
