@@ -100,7 +100,7 @@ public class LeadElector {
 				this.mServer.sendMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 						Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
 			
-		}else {
+		} else {
 			// Forward message to own uid
 			sb = new StringBuilder();
 			sb.append(LCR_PREFIX);

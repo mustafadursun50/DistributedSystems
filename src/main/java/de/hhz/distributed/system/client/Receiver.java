@@ -1,4 +1,4 @@
-package multicast;
+package de.hhz.distributed.system.client;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;

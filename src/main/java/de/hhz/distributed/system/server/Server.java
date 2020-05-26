@@ -116,7 +116,7 @@ public class Server implements Runnable {
 					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
-					new Thread(new MessageHandler(mSocket)).start();
+					new Thread(new MessageHandler(mSocket, Constants.MULTICAST_PORT2)).start();
 				}
 
 			} catch (Exception e) {

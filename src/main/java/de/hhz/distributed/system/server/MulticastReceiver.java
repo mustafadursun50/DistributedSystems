@@ -90,7 +90,7 @@ public class MulticastReceiver implements Runnable {
 					Properties hostProperties = new Properties();
 					hostProperties.put(Constants.PROPERTY_HOST_ADDRESS, packet.getAddress().getHostAddress());
 					hostProperties.put(Constants.PROPERTY_HOST_PORT, hostPort);
-//Fill host list
+					// Fill host list
 					if (!knownHosts.containsKey(hostUid)) {
 						knownHosts.put(hostUid, hostProperties);
 						sendMulticastMessage();
