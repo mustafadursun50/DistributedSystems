@@ -35,10 +35,9 @@ public class Receiver {
         socket.receive(packet);
         String message = new String(packet.getData(),0,packet.getLength(), TEXT_ENCODING);
         System.out.println(message);
-      }   
-     
+      }    
     } catch (IOException e) {
-      e.printStackTrace();
+    	e.printStackTrace();
     }
   }
 }

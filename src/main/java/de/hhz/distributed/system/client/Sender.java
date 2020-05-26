@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 
-
 public class Sender {
 
   public static void main(String[] args) {
@@ -21,11 +20,15 @@ public class Sender {
    
     try {
       MulticastSocket socket =  new MulticastSocket(CLIENT_MULTICAST_PORT);
-      byte[] message = "Hallo Welt".getBytes(TEXT_ENCODING);
+      
+      int id1 = 0;
+      int id2 = 5;
+      int id3 = 8;
+           
+      byte[] message = (NETWORK_GROUP+","+NETWORK_GROUP_PORT+","+id1+","+id2+","+id3).getBytes(TEXT_ENCODING);
      
       // Nachricht an Gruppe senden
-      socket.send(new DatagramPacket(message, message.length , InetAddress.getByName(NETWORK_GROUP) ,
-NETWORK_GROUP_PORT));
+      socket.send(new DatagramPacket(message, message.length , InetAddress.getByName(NETWORK_GROUP), NETWORK_GROUP_PORT));
     } catch (IOException e) {
       e.printStackTrace();
     }
