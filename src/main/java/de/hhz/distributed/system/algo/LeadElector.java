@@ -56,11 +56,7 @@ public class LeadElector {
 	 */
 	public void handleVoting(String input) throws NumberFormatException, ClassNotFoundException, IOException {
 		
-		
-		
-		//Send msg to second neihgbor if first ist not responding
-		
-		
+	
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
@@ -75,6 +71,7 @@ public class LeadElector {
 
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
+
 		String host = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 		int port = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
@@ -97,6 +94,7 @@ public class LeadElector {
 //server should declare itself as coordinator or received coordination message
 		if ((recvUid.compareTo(mServer.getUid()) == 0) || isCoorinationMsg) {
 			firstRound = true;// Election completed. Reset first round
+
 			// The coordination message was initiated by this server. End message
 			// transmission.
 			if ((recvUid.compareTo(mServer.getUid()) == 0) && isCoorinationMsg) {
@@ -120,7 +118,6 @@ public class LeadElector {
 			// Forward message to neihbor
 			sb.append(recvUid);
 			this.mServer.sendElectionMessage(sb.toString(), host, port);
-
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());

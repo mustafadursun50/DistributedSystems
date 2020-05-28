@@ -30,7 +30,7 @@ public class LeadElectorListener implements PropertyChangeListener {
 		if (voting) {
 			return;
 		}
-		Timer leaderElectedTimer = new Timer();
+		final Timer leaderElectedTimer = new Timer();
 
 		TimerTask task = new TimerTask() {
 			@Override

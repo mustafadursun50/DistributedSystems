@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.hhz.distributed.system.algo.LeadElectorListener;
+import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.server.FailureDedector;
 import de.hhz.distributed.system.server.Server;
 
@@ -16,7 +17,8 @@ public class App {
 		
 		FailureDedector failureDedector = new FailureDedector();
 		new Thread(failureDedector).start();
-		new LeadElectorListener(failureDedector,servers);
+		new LeadElectorListener(failureDedector, servers);
+		ProductDb.initializeDb();
 	}
 
 	public List<Server> generateServers() throws IOException, ClassNotFoundException, InterruptedException {
@@ -28,11 +30,6 @@ public class App {
 			new Thread(server).start();
 			servers.add(server);
 		}
-		
-		Thread.sleep(300);
-		//Zur Beginn: letzte Server wird direkt Leader gewählt. Kann später mit LeadElector Logik abgelöst werden.
-//		Thread.sleep(300);
-//		server.startVoting();
 		return servers;
 	}
 }
