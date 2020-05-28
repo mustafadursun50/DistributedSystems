@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -18,29 +19,28 @@ import de.hhz.distributed.system.handlers.MessageHandler;
 public class Server implements Runnable {
 	private ServerSocket mServerSocket;
 	private Socket mSocket;
-	private int uid;
+	private UUID uid;
 	private MulticastReceiver mMulticastReceiver;
 	private InetAddress host = InetAddress.getLocalHost();
 	private int port;
 	private LeadElector mElector;
 
-	private int leadUid;
+	private UUID leadUid;
 	private boolean isLeader;
 
-	public Server(final int port, final int uid) throws IOException, ClassNotFoundException {
+	public Server(final int port) throws IOException, ClassNotFoundException {
 
 		this.mServerSocket = new ServerSocket(port);
-		this.uid = uid;
+		this.uid = UUID.randomUUID();
 		this.port = port;
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
-		System.out.println("Server UID " + uid + " listing on " + this.host.getHostAddress() + ":" + this.port);
-
 		doPing();
 	}
-/**
- * Leader send ping to replicas
- */
+
+	/**
+	 * Leader send ping to replicas
+	 */
 	public void doPing() {
 		Runnable runnable = new Runnable() {
 			public void run() {
@@ -49,7 +49,7 @@ public class Server implements Runnable {
 						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
 							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 							int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-							sendMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
+							sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
 						}
 					}
 				} catch (Exception e) {
@@ -77,6 +77,10 @@ public class Server implements Runnable {
 		return s;
 	}
 
+	public int getPort() {
+		return this.port;
+	}
+
 	public void close() throws IOException {
 		this.mServerSocket.close();
 		this.mMulticastReceiver.close();
@@ -90,20 +94,43 @@ public class Server implements Runnable {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public void sendMessage(final String message, String hostAddress, final int port)
-			throws IOException, ClassNotFoundException {
-		Socket socket = new Socket(hostAddress, port);
-		ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-		mObjectOutputStream.writeObject(message);
-		mObjectOutputStream.flush();
-		mObjectOutputStream.close();
-		socket.close();
+	public void sendElectionMessage(final String message, String hostAddress, final int port)
+			throws ClassNotFoundException {
+		try {
+			Socket socket = new Socket(hostAddress, port);
+			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+			mObjectOutputStream.writeObject(message);
+			mObjectOutputStream.flush();
+			mObjectOutputStream.close();
+			socket.close();
+		} catch (IOException e) {
+			// Member could not be reached
+			// Clean list an
+			this.mMulticastReceiver.removeNeighbor();
+			// Send election to next neighbor
+			Properties neihborProps = this.mMulticastReceiver.getNeihbor();
+			String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+			int neihgborPort = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
+
+			this.sendElectionMessage(message, neihgborHost, neihgborPort);
+		}
 	}
-/**
- * Handle incoming messages
- */
+
+	/**
+	 * Handle incoming messages
+	 */
 	public void run() {
 		new Thread(this.mMulticastReceiver).start();
+		// Wait for multicast receiver to start
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		this.mMulticastReceiver.sendMulticastMessage();
+		System.out.println("Server UID " + uid + " listing on " + this.host.getHostAddress() + ":" + this.port);
+
 		while (true) {
 			try {
 				this.mSocket = this.mServerSocket.accept();
@@ -125,10 +152,6 @@ public class Server implements Runnable {
 		}
 	}
 
-	public void sendMulticastMessage() {
-		this.mMulticastReceiver.sendMulticastMessage();
-	}
-
 	public void startVoting() {
 		try {
 			mElector.initiateVoting();
@@ -138,11 +161,11 @@ public class Server implements Runnable {
 		}
 	}
 
-	public int getLeadUid() {
+	public UUID getLeadUid() {
 		return leadUid;
 	}
 
-	public void setLeadUid(int leadUid) {
+	public void setLeadUid(UUID leadUid) {
 		this.leadUid = leadUid;
 	}
 
@@ -150,7 +173,7 @@ public class Server implements Runnable {
 		this.isLeader = isLeader;
 	}
 
-	public int getUid() {
+	public UUID getUid() {
 		return this.uid;
 	}
 

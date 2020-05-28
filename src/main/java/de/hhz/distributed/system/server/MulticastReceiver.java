@@ -5,9 +5,13 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.UUID;
 
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
@@ -17,12 +21,13 @@ public class MulticastReceiver implements Runnable {
 	private InetAddress group;
 	private byte[] buf = new byte[256];
 	private int serverPort;
-	int uid;
+	UUID uid;
+	String neighborUid;
 
-	//List of host uid with ip and ports
+	// List of host uid with ip and ports
 	Map<String, Properties> knownHosts = new HashMap<String, Properties>();
 
-	public MulticastReceiver(int uid, int port) {
+	public MulticastReceiver(UUID uid, int port) {
 		try {
 			group = InetAddress.getByName(Constants.MULTICAST_ADDRESS);
 		} catch (UnknownHostException e) {
@@ -47,16 +52,34 @@ public class MulticastReceiver implements Runnable {
 
 	/**
 	 * Get neihbor server
+	 * 
 	 * @return
 	 */
 	public Properties getNeihbor() {
 		if (knownHosts.size() > 0) {
-			int neihborUid = (this.uid + 1) % knownHosts.size();
-			if (this.knownHosts.containsKey(String.valueOf(neihborUid))) {
-				return knownHosts.get(String.valueOf(neihborUid));
+			List<String> uuids = new ArrayList<String>(knownHosts.keySet());
+			// Sort list
+			Collections.sort(uuids);
+			// Get my position in the list
+			int pos = -1;
+			for (int i = 0; i < uuids.size(); i++) {
+				if (uuids.get(i).equals(this.uid.toString())) {
+					pos = i;
+					break;
+				}
+			}
+			// The neighbor sit at the next bigger position
+			int neihborPos = (pos + 1) % uuids.size();
+			if (this.knownHosts.containsKey(uuids.get(neihborPos))) {
+				this.neighborUid = uuids.get(neihborPos);
+				return knownHosts.get(uuids.get(neihborPos));
 			}
 		}
 		return null;
+	}
+
+	public void removeNeighbor() {
+		this.knownHosts.remove(this.neighborUid);
 	}
 
 	public void sendMulticastMessage() {

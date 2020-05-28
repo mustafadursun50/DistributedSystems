@@ -24,15 +24,13 @@ public class App {
         List<Server> servers=new ArrayList<Server>();
 
 		for (int i = 0; i < Constants.NUMBER_OF_SERVERS; i++) {
-			server = new Server(Constants.SERVER_PORT_START++,
-					Constants.SERVER_UUID_START++);
+			server = new Server(Constants.SERVER_PORT_START++);
 			new Thread(server).start();
 			servers.add(server);
 		}
 		
 		Thread.sleep(300);
 		//Zur Beginn: letzte Server wird direkt Leader gewählt. Kann später mit LeadElector Logik abgelöst werden.
-		server.sendMulticastMessage();
 //		Thread.sleep(300);
 //		server.startVoting();
 		return servers;
