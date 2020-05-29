@@ -13,6 +13,7 @@ public class ProductDb {
 	
 	public static void initializeDb() {
 		try {
+			System.out.println("Initialize database..");
 			fileDb = new File("productDb.txt");
 			if(fileDb.createNewFile()) {
 				String initalDbLoad =  "banana "+ 10 +", "+ "milk "+ 10 + ", "+ "tomato " + 10;
@@ -71,7 +72,7 @@ public class ProductDb {
 	}
 
 
-	public static String getData() {
+	public static String getCurrentData() {
 		try {
 			return Files.readAllLines(Paths.get("productDb.txt")).get(0);
 		} catch (FileNotFoundException e) {

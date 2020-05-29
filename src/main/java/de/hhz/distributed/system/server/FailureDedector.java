@@ -22,11 +22,10 @@ public class FailureDedector implements Runnable {
 	}
 
 	public void run() {	
-		
+		System.out.println("Start FailureDedector..");
 		while (true) {		
 			LocalTime now = LocalTime.now();
     		long diffInSec = Duration.between(lastOkay, now).toSeconds();
-    	
     		if(diffInSec > Constants.MAX_PING_LIMIT_SEC) {
     			notifyLeadElector();
     		}

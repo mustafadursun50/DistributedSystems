@@ -41,7 +41,6 @@ public class Server implements Runnable {
 /**
  * Leader send ping to replicas and say's i am here.
  */
-
 	public void doPing() {
 		Runnable runnable = new Runnable() {
 			public void run() {
@@ -59,9 +58,8 @@ public class Server implements Runnable {
 			}
 		};
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		// Ping Configuration: For first run wait 5 sec. And then periodically every 10
-		// sec.
-		service.scheduleAtFixedRate(runnable, 5, 10, TimeUnit.SECONDS);
+		// Ping: For first run wait 0 sec. And then periodically every 4 sec.
+		service.scheduleAtFixedRate(runnable, 0, 4, TimeUnit.SECONDS);
 
 	}
 
@@ -126,7 +124,6 @@ public class Server implements Runnable {
 		try {
 			Thread.sleep(100);
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		this.mMulticastReceiver.sendMulticastMessage();
@@ -146,7 +143,6 @@ public class Server implements Runnable {
 					System.out.println("client connection accepted");
 					new Thread(new MessageHandler(mSocket, Constants.MULTICAST_PORT2)).start();
 				}
-
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -185,5 +181,4 @@ public class Server implements Runnable {
 	public boolean isLeader() {
 		return this.isLeader;
 	}
-
 }

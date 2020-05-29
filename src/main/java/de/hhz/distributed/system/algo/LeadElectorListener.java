@@ -56,7 +56,7 @@ public class LeadElectorListener implements PropertyChangeListener {
 			}
 		}
 		servers.remove(leader);
-		System.out.println(evt.getPropertyName() + " occurred -> start..");
+		System.out.println(evt.getPropertyName() + " occurred!!");
 		servers.get(0).startVoting();
 		leaderElectedTimer.schedule(task, 0, 10);
 

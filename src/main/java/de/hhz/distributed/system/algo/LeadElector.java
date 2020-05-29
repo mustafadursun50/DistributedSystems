@@ -40,7 +40,7 @@ public class LeadElector {
 		sb.append(LCR_PREFIX);
 		sb.append(MESSAGE_SEPARATOR);
 		sb.append(mServer.getUid());
-		System.out.println("Server UID " + mServer.getUid() +" "+mServer.getPort()+ " initiate voting");
+		System.out.println("Server " + mServer.getUid() + " initiate voting!");
 	
 		this.mServer.sendElectionMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 				Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
@@ -60,7 +60,7 @@ public class LeadElector {
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		System.out.println("Server UID " + this.mServer.getPort() + " Recv " + input);
+		System.out.println("Sent: " + input + " --> " + this.mServer.getUid());
 
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = UUID.fromString((input.split(MESSAGE_SEPARATOR)[1]));
@@ -91,12 +91,11 @@ public class LeadElector {
 		sb.append(MESSAGE_SEPARATOR);
 		// second round, compare received message with own id
 
-//server should declare itself as coordinator or received coordination message
+		//server should declare itself as coordinator or received coordination message
 		if ((recvUid.compareTo(mServer.getUid()) == 0) || isCoorinationMsg) {
 			firstRound = true;// Election completed. Reset first round
 
-			// The coordination message was initiated by this server. End message
-			// transmission.
+			// coordination message was initiated by this server. End message transmission.
 			if ((recvUid.compareTo(mServer.getUid()) == 0) && isCoorinationMsg) {
 				return;
 			}
@@ -108,8 +107,8 @@ public class LeadElector {
 				// Server declare itself as coordinator
 				sb.append(this.mServer.getUid());
 				this.mServer.setIsLeader(true);
-				System.out.println(" Election completed. Server UID " + this.mServer.getPort()
-						+ " won. Now send COOR to anothers servers");
+				System.out.println("Election completed. " + this.mServer.getUid()+ " won!");
+				System.out.println("Now send COOR to anothers servers..");
 			}
 			sb.append(MESSAGE_SEPARATOR);
 			sb.append(MESSAGE_COOR);

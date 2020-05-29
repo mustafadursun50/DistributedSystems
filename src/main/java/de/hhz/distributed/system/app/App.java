@@ -16,8 +16,8 @@ public class App {
 		 List<Server> servers = new App().generateServers();
 		
 		FailureDedector failureDedector = new FailureDedector();
-		new Thread(failureDedector).start();
 		new LeadElectorListener(failureDedector, servers);
+		new Thread(failureDedector).start();
 		ProductDb.initializeDb();
 	}
 
