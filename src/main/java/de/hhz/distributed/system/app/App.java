@@ -13,12 +13,13 @@ public class App {
 
 	public static void main(String args[]) throws IOException, InterruptedException, ClassNotFoundException {
 
-		 List<Server> servers = new App().generateServers();
+		ProductDb.initializeDb();
+		
+		List<Server> servers = new App().generateServers();
 		
 		FailureDedector failureDedector = new FailureDedector();
 		new LeadElectorListener(failureDedector, servers);
 		new Thread(failureDedector).start();
-		ProductDb.initializeDb();
 	}
 
 	public List<Server> generateServers() throws IOException, ClassNotFoundException, InterruptedException {

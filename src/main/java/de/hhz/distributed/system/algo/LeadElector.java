@@ -1,6 +1,7 @@
 package de.hhz.distributed.system.algo;
 
 import java.io.IOException;
+import java.time.LocalTime;
 import java.util.Properties;
 import java.util.TimerTask;
 import java.util.UUID;
@@ -115,7 +116,7 @@ public class LeadElector {
 				// Server declare itself as coordinator
 				sb.append(this.mServer.getUid());
 				this.mServer.setIsLeader(true);
-				System.out.println("Election completed. " + this.mServer.getUid()+ " won!");
+				System.out.println("Election completed. " + this.mServer.getUid()+ " won! " +  LocalTime.now());
 				System.out.println("Now send COOR to anothers servers..");
 			}
 			sb.append(MESSAGE_SEPARATOR);

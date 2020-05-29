@@ -58,8 +58,9 @@ public class Server implements Runnable {
 			}
 		};
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
-		// Ping: For first run wait 0 sec. And then periodically every 4 sec.
-		service.scheduleAtFixedRate(runnable, 0, 4, TimeUnit.SECONDS);
+		// Define: wait time for first run. And then periodically ping interval.
+		service.scheduleAtFixedRate(runnable, Constants.START_FIRST_PING_AFTER_SEC, 
+				Constants.PING_INTERVALL_SEC, TimeUnit.SECONDS);
 
 	}
 
@@ -137,6 +138,7 @@ public class Server implements Runnable {
 					mSocket.close();
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
+					System.out.println("Ping da. ");
 					mSocket.close();
 					FailureDedector.updateLastOkayTime();
 				} else {
