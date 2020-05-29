@@ -2,6 +2,7 @@ package de.hhz.distributed.system.algo;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import de.hhz.distributed.system.app.Constants;
@@ -34,6 +35,10 @@ public class LeadElector {
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 		if (neihborProps == null) {
 			System.out.println("Server has no neihbor");
+			if(this.mMulticastReceiver.getKnownHosts().size()==0) {
+				this.mServer.setIsLeader(true);
+				System.out.println("Server is leader");
+			}
 			return;
 		}
 		StringBuilder sb = new StringBuilder();
@@ -56,7 +61,6 @@ public class LeadElector {
 	 */
 	public void handleVoting(String input) throws NumberFormatException, ClassNotFoundException, IOException {
 		
-	
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
@@ -71,7 +75,11 @@ public class LeadElector {
 
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-
+        if(neihborProps == null) {
+        	System.out.println("Server is leader");
+			this.mServer.setIsLeader(true);
+        	return;
+        }
 		String host = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 		int port = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
@@ -124,6 +132,5 @@ public class LeadElector {
 			this.mServer.sendElectionMessage(sb.toString(), host, port);
 		}
 
-	}
-
+	}	
 }
