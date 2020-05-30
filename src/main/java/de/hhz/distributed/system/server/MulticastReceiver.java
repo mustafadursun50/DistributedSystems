@@ -29,7 +29,7 @@ public class MulticastReceiver implements Runnable {
 
 	public MulticastReceiver(UUID uid, int port) {
 		try {
-			group = InetAddress.getByName(Constants.MULTICAST_ADDRESS);
+			group = InetAddress.getByName(Constants.SERVER_MULTICAST_ADDRESS);
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
@@ -88,7 +88,7 @@ public class MulticastReceiver implements Runnable {
 		sb.append(LeadElector.MESSAGE_SEPARATOR);
 		sb.append(this.serverPort);
 		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
-				this.group, Constants.MULTICAST_PORT);
+				this.group, Constants.SERVER_MULTICAST_PORT);
 		try {
 			this.mMulticastSocket.send(msgPacket);
 			// System.out.println("send multicast msg from port: " + portAsString);
@@ -99,7 +99,7 @@ public class MulticastReceiver implements Runnable {
 
 	public void run() {
 		try {
-			mMulticastSocket = new MulticastSocket(Constants.MULTICAST_PORT);
+			mMulticastSocket = new MulticastSocket(Constants.SERVER_MULTICAST_PORT);
 			mMulticastSocket.joinGroup(group);
 			mMulticastSocket.setLoopbackMode(false);
 			mMulticastSocket.setTimeToLive(1);

@@ -3,10 +3,15 @@ package de.hhz.distributed.system.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -24,7 +29,7 @@ public class Server implements Runnable {
 	private InetAddress host = InetAddress.getLocalHost();
 	private int port;
 	private LeadElector mElector;
-
+	private Timer updateClientsTimer;
 	private UUID leadUid;
 	private boolean isLeader;
 
@@ -38,9 +43,9 @@ public class Server implements Runnable {
 		doPing();
 	}
 
-/**
- * Leader send ping to replicas and say's i am here.
- */
+	/**
+	 * Leader send ping to replicas and say's i am here.
+	 */
 	public void doPing() {
 		Runnable runnable = new Runnable() {
 			public void run() {
@@ -59,8 +64,8 @@ public class Server implements Runnable {
 		};
 		ScheduledExecutorService service = Executors.newSingleThreadScheduledExecutor();
 		// Define: wait time for first run. And then periodically ping interval.
-		service.scheduleAtFixedRate(runnable, Constants.START_FIRST_PING_AFTER_SEC, 
-				Constants.PING_INTERVALL_SEC, TimeUnit.SECONDS);
+		service.scheduleAtFixedRate(runnable, Constants.START_FIRST_PING_AFTER_SEC, Constants.PING_INTERVALL_SEC,
+				TimeUnit.SECONDS);
 
 	}
 
@@ -143,7 +148,7 @@ public class Server implements Runnable {
 					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
-					new Thread(new MessageHandler(mSocket, Constants.MULTICAST_PORT2)).start();
+					new Thread(new MessageHandler(mSocket, Constants.CLIENT_MULTICAST_PORT)).start();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -170,6 +175,35 @@ public class Server implements Runnable {
 
 	public void setIsLeader(boolean isLeader) {
 		this.isLeader = isLeader;
+		if (updateClientsTimer != null) {
+			updateClientsTimer.cancel();
+		}
+		if (isLeader) {
+			updateClientsTimer = new Timer();
+			TimerTask task = new TimerTask() {
+				@Override
+				public void run() {
+					try {
+						SendUpdateDataStoreToClients();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+
+				}
+			};
+			updateClientsTimer.schedule(task, 10, 800);
+		}
+	}
+
+	public void SendUpdateDataStoreToClients() throws IOException {
+		System.out.println("Leader: send port to clients");
+		MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.port);
+		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
+				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
+		mMulticastSocket.send(msgPacket);
+		mMulticastSocket.close();
 	}
 
 	public UUID getUid() {
