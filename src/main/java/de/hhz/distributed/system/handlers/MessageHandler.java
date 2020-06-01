@@ -3,6 +3,7 @@ package de.hhz.distributed.system.handlers;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.DatagramPacket;
@@ -37,9 +38,9 @@ public class MessageHandler implements Runnable {
 			PrintWriter out = new PrintWriter(mSocket.getOutputStream(), true);
 			out.println("Choose one: banana, milk, tometo");
 			out.println("------------------------------");
-			BufferedReader input = new BufferedReader(new InputStreamReader(mSocket.getInputStream()));
-			String clientRequest = input.readLine();
-			
+			ObjectInputStream mObjectInputStream = new ObjectInputStream(this.mSocket.getInputStream());
+			String clientRequest = (String) mObjectInputStream.readObject();
+
 			if(clientRequest.contains("Buy")) {
 				if(ProductDb.updateProductDb(clientRequest)) {
 					String updatedDbData = fifoDeliver.assigneSequenceId();
@@ -54,7 +55,7 @@ public class MessageHandler implements Runnable {
 			else {
 				this.sendClientMessage("NotSupportedMessageType..", "hostAddress", Integer.parseInt("port"));
 			}
-			input.close();
+			mObjectInputStream.close();
 			out.close();
 			mSocket.close();
 		} catch (Exception e) {
