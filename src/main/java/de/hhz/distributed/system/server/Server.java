@@ -112,6 +112,8 @@ public class Server implements Runnable {
 			// Member could not be reached
 			// Clean list an
 			this.mMulticastReceiver.removeNeighbor();
+			
+			System.out.println();
 			// Send election to next neighbor
 			Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 			String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
@@ -140,9 +142,13 @@ public class Server implements Runnable {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
-				
 				mSocket.close();
-				if (input.startsWith(LeadElector.LCR_PREFIX)) {
+				
+				if (input.equals("0,0,0")) { // stop Leader to test election
+					this.close();
+					return;
+				}
+				else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
 					FailureDedector.updateLastOkayTime();
