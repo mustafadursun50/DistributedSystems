@@ -4,7 +4,7 @@ public class Constants {
 	public static int SERVER_PORT_START = 800;
 	public static int SERVER_UUID_START = 0;
 	public final static int SERVER_MULTICAST_PORT = 4446;
-	public final static int CLIENT_MULTICAST_PORT = 5556;
+	public final static int CLIENT_MULTICAST_PORT = 4447;
 	public final static int NUMBER_OF_SERVERS = 3;
 	public final  static String SERVER_MULTICAST_ADDRESS = "230.0.0.0";
 	public final  static String CLIENT_MULTICAST_ADDRESS = "230.0.0.1";

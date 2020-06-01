@@ -14,7 +14,7 @@ public class ProductDb {
 	public static void initializeDb() {
 		try {
 			System.out.println("Initialize database..");
-			fileDb = new File("productDb.txt");
+			fileDb = new File("product.txt");
 			if(fileDb.createNewFile()) {
 				String initalDbLoad =  10 +"," + 10 + "," + 10;
 				pw = new PrintWriter(fileDb);

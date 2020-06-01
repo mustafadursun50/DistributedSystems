@@ -203,6 +203,7 @@ public class Server implements Runnable {
 				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
 		mMulticastSocket.send(msgPacket);
 		mMulticastSocket.close();
+		//System.out.println(this.host.getHostAddress() + ":" + this.port+" geschickt");
 	}
 
 	public UUID getUid() {

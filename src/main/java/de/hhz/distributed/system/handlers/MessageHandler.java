@@ -33,28 +33,30 @@ public class MessageHandler implements Runnable {
 	}
 
 	public void run() {
+		
+		
+		
 		try {
+			System.out.println("THIS: "+this.message);
 			if (ProductDb.updateProductDb(this.message)) {
 				String updatedDbData = fifoDeliver.assigneSequenceId();
 				this.sendClientMulticastMessage(updatedDbData);
 			} else {
-				this.sendClientMessage("NotSupportedMessageType..", this.clientIp, this.clientPort);
+				//this.sendClientMessage("NotSupportedMessageType..", this.clientIp, this.clientPort);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void sendClientMulticastMessage(String productUpdate) {
+	private void sendClientMulticastMessage(String productUpdate) throws IOException {
+	MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
 		StringBuilder sb = new StringBuilder();
 		sb.append(productUpdate);
 		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
-				this.group, Constants.CLIENT_MULTICAST_PORT);
-		try {
-			this.mMulticastSocket.send(msgPacket);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
+		mMulticastSocket.send(msgPacket);
+		mMulticastSocket.close();
 	}
 
 	private void sendClientMessage(final String message, String hostAddress, final int port) {
