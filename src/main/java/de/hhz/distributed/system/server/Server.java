@@ -139,15 +139,16 @@ public class Server implements Runnable {
 			try {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
+				String clientIp = mSocket.getInetAddress().getHostAddress();
+				
+				mSocket.close();
 				if (input.startsWith(LeadElector.LCR_PREFIX)) {
-					mSocket.close();
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
-					mSocket.close();
 					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
-					new Thread(new MessageHandler(mSocket, Constants.CLIENT_MULTICAST_PORT)).start();
+					new Thread(new MessageHandler(input,clientIp,this.port )).start();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
