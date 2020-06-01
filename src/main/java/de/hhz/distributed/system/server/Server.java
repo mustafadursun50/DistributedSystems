@@ -143,7 +143,6 @@ public class Server implements Runnable {
 					mSocket.close();
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
-					System.out.println("Ping da. ");
 					mSocket.close();
 					FailureDedector.updateLastOkayTime();
 				} else {
@@ -196,7 +195,6 @@ public class Server implements Runnable {
 	}
 
 	public void SendUpdateDataStoreToClients() throws IOException {
-		System.out.println("Leader: send port to clients");
 		MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.port);
