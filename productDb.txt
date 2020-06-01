@@ -1,1 +1,1 @@
-banana 10, milk 10, tomato 10
+10,10,10

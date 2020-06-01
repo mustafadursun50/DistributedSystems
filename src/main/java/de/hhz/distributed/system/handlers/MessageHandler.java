@@ -41,17 +41,17 @@ public class MessageHandler implements Runnable {
 			ObjectInputStream mObjectInputStream = new ObjectInputStream(this.mSocket.getInputStream());
 			String clientRequest = (String) mObjectInputStream.readObject();
 
-			if(clientRequest.contains("Buy")) {
+		//	if(clientRequest.contains("Buy")) {
 				if(ProductDb.updateProductDb(clientRequest)) {
 					String updatedDbData = fifoDeliver.assigneSequenceId();
 					this.sendClientMulticastMessage(updatedDbData);
 				}	
-			}
-			else if(clientRequest.contains("Reupdate")) {
+	//		} ////////////// needed later...
+		/*	else if(clientRequest.contains("Reupdate")) {
 				long sequenceId = Long.parseLong(clientRequest.substring(9));
 				String dataWithoutSeq = fifoDeliver.deliverAskedMessage(sequenceId);
 				this.sendClientMessage(dataWithoutSeq, "hostAddress", Integer.parseInt("port"));
-			}
+			}*/
 			else {
 				this.sendClientMessage("NotSupportedMessageType..", "hostAddress", Integer.parseInt("port"));
 			}

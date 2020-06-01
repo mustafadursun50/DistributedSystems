@@ -16,7 +16,7 @@ public class ProductDb {
 			System.out.println("Initialize database..");
 			fileDb = new File("productDb.txt");
 			if(fileDb.createNewFile()) {
-				String initalDbLoad =  "banana "+ 10 +", "+ "milk "+ 10 + ", "+ "tomato " + 10;
+				String initalDbLoad =  10 +"," + 10 + "," + 10;
 				pw = new PrintWriter(fileDb);
 				pw.println(initalDbLoad);
 				pw.close();
@@ -34,14 +34,14 @@ public class ProductDb {
 		try {
 			String products = Files.readAllLines(Paths.get("product.txt")).get(0);
 			String [] splitedDb = products.split(",");
-			int bananaDb = Integer.parseInt(splitedDb[0].substring(7));
-			int milkDb = Integer.parseInt(splitedDb[1].substring(6));
-			int tomatoDb = Integer.parseInt(splitedDb[2].substring(6));
+			int bananaDb = Integer.parseInt(splitedDb[0]);
+			int milkDb = Integer.parseInt(splitedDb[1]);
+			int tomatoDb = Integer.parseInt(splitedDb[2]);
 			
 			String [] splitedReq = dataReq.split(",");
-			int bananaReq = Integer.parseInt(splitedReq[0].substring(7));
-			int milkReq = Integer.parseInt(splitedReq[1].substring(6));
-			int tomatoReq = Integer.parseInt(splitedReq[2].substring(8));
+			int bananaReq = Integer.parseInt(splitedReq[0]);
+			int milkReq = Integer.parseInt(splitedReq[1]);
+			int tomatoReq = Integer.parseInt(splitedReq[2]);
 			
 			if(bananaDb >= bananaReq && bananaReq > 0) {
 				bananaDb += -bananaReq;
@@ -56,7 +56,7 @@ public class ProductDb {
 				updateSuccessful = true;
 			}
 			
-			String updatedDb =  "banana "+ bananaDb +", "+ "milk "+ milkDb + ", "+ tomatoReq;
+			String updatedDb =  bananaDb +","+ milkDb + ","+ tomatoReq;
 			pw = new PrintWriter(fileDb);
 			pw.println(updatedDb);
 		} catch (FileNotFoundException e) {
