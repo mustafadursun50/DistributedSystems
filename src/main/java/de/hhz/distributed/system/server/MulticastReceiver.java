@@ -105,6 +105,7 @@ public class MulticastReceiver implements Runnable {
 			mMulticastSocket.setTimeToLive(1);
 			while (true) {
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
+				
 				mMulticastSocket.receive(packet);
 				String receivedMsg = new String(packet.getData(), 0, packet.getLength());
 				if (receivedMsg != null && receivedMsg.split(":").length == 2) {

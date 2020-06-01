@@ -2,7 +2,6 @@ package de.hhz.distributed.system.algo;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;

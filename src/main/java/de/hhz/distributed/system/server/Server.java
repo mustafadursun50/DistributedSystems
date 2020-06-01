@@ -51,10 +51,15 @@ public class Server implements Runnable {
 			public void run() {
 				try {
 					if (isLeader) {
-						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
-							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
-							int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-							sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
+						// server should ping itself if alone. Failure detector should not stop
+						if (mMulticastReceiver.getKnownHosts().size() == 0) {
+							sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host.getHostAddress(), port);
+						} else {
+							for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
+								String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+								int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+								sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
+							}
 						}
 					}
 				} catch (Exception e) {
@@ -111,15 +116,20 @@ public class Server implements Runnable {
 		} catch (IOException e) {
 			// Member could not be reached
 			// Clean list an
-			this.mMulticastReceiver.removeNeighbor();
-			
-			System.out.println();
-			// Send election to next neighbor
-			Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-			String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
-			int neihgborPort = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
+			if (message.startsWith(LeadElector.LCR_PREFIX)) {
+				this.mMulticastReceiver.removeNeighbor();
+				// Send election to next neighbor
+				Properties neihborProps = this.mMulticastReceiver.getNeihbor();
+				if (neihborProps == null) {
+					this.setIsLeader(true);
+					// Server has no neighbor and should delacre itself as leader
+					return;
+				}
+				String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+				int neihgborPort = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
-			this.sendElectionMessage(message, neihgborHost, neihgborPort);
+				this.sendElectionMessage(message, neihgborHost, neihgborPort);
+			}
 		}
 	}
 
@@ -139,22 +149,25 @@ public class Server implements Runnable {
 
 		while (true) {
 			try {
+				// Use to test server stop
+				if (this.mServerSocket.isClosed()) {
+					return;
+				}
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
 				mSocket.close();
-				
+
 				if (input.equals("0,0,0")) { // stop Leader to test election
 					this.close();
 					return;
-				}
-				else if (input.startsWith(LeadElector.LCR_PREFIX)) {
+				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
 					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
-					new Thread(new MessageHandler(input,clientIp,this.port )).start();
+					new Thread(new MessageHandler(input, clientIp, this.port)).start();
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -185,6 +198,7 @@ public class Server implements Runnable {
 			updateClientsTimer.cancel();
 		}
 		if (isLeader) {
+			System.out.println("server is leader:" + this.port);
 			updateClientsTimer = new Timer();
 			TimerTask task = new TimerTask() {
 				@Override
@@ -198,6 +212,7 @@ public class Server implements Runnable {
 				}
 			};
 			updateClientsTimer.schedule(task, 10, 800);
+
 		}
 	}
 
@@ -209,7 +224,8 @@ public class Server implements Runnable {
 				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
 		mMulticastSocket.send(msgPacket);
 		mMulticastSocket.close();
-		//System.out.println(this.host.getHostAddress() + ":" + this.port+" geschickt");
+		// System.out.println(this.host.getHostAddress() + ":" + this.port+"
+		// geschickt");
 	}
 
 	public UUID getUid() {
