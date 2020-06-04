@@ -13,10 +13,12 @@ public class App {
 
 	public static void main(String args[]) throws IOException, InterruptedException, ClassNotFoundException {
 
+		int port = Integer.parseInt(System.getProperty("port"));
 		ProductDb.initializeDb();
-		
-		List<Server> servers = new App().generateServers();
-		
+		Server server = new Server(port);
+		List<Server> servers = new ArrayList<Server>();
+		servers.add(server);
+		new Thread(server).start();
 		FailureDedector failureDedector = new FailureDedector();
 		new LeadElectorListener(failureDedector, servers);
 		new Thread(failureDedector).start();
@@ -24,7 +26,7 @@ public class App {
 
 	public List<Server> generateServers() throws IOException, ClassNotFoundException, InterruptedException {
 		Server server = null;
-        List<Server> servers=new ArrayList<Server>();
+		List<Server> servers = new ArrayList<Server>();
 
 		for (int i = 0; i < Constants.NUMBER_OF_SERVERS; i++) {
 			server = new Server(Constants.SERVER_PORT_START++);
