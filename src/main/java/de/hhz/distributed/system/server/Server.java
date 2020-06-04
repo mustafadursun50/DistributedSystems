@@ -16,6 +16,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
@@ -32,7 +33,9 @@ public class Server implements Runnable {
 	private Timer updateClientsTimer;
 	private UUID leadUid;
 	private boolean isLeader;
+
 	private boolean isElectionRunning;
+	private FifoDeliver fifoDeliver;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
@@ -41,6 +44,8 @@ public class Server implements Runnable {
 		this.port = port;
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
+		this.fifoDeliver = new FifoDeliver();
+
 	}
 
 	/**
@@ -155,18 +160,14 @@ public class Server implements Runnable {
 
 		while (true) {
 			try {
-				// Use to test server stop
-				if (this.mServerSocket.isClosed()) {
-					return;
-				}
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
 				mSocket.close();
 
-				if (input.equals("0,0,0")) { // stop Leader to test election
-					this.close();
-					return;
+				if (input.contains("0,0,0,")) {
+					boolean successfullSent = fifoDeliver.deliverAskedMessage(input);
+					System.out.println("updateMessage successfullSent: " + successfullSent);
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
@@ -210,11 +211,12 @@ public class Server implements Runnable {
 			this.doPing();
 			this.isElectionRunning = false;
 			updateClientsTimer = new Timer();
+			System.out.println("start permanent client update..");
 			TimerTask task = new TimerTask() {
 				@Override
 				public void run() {
 					try {
-						SendUpdateDataStoreToClients();
+						permanentClientUpdate();
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
@@ -225,18 +227,21 @@ public class Server implements Runnable {
 
 		}
 	}
-
-	public void SendUpdateDataStoreToClients() throws IOException {
+	
+	private void permanentClientUpdate() throws IOException {
+		// prepare data
+		String dataWithSequenceId  = 	this.fifoDeliver.getCurrentDbDataWithUpdatedSequenceId();
+		String dataToSent = this.port + "," + dataWithSequenceId;
+		// sent data
 		MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
 		StringBuilder sb = new StringBuilder();
-		sb.append(this.port);
+		sb.append(dataToSent);
 		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
 				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
 		mMulticastSocket.send(msgPacket);
 		mMulticastSocket.close();
-		// System.out.println(this.host.getHostAddress() + ":" + this.port+"
-		// geschickt");
 	}
+	
 
 	public UUID getUid() {
 		return this.uid;

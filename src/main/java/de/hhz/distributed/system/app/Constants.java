@@ -15,4 +15,5 @@ public class Constants {
 	public final static long MAX_PING_LIMIT_SEC = 30;
 	public static final Object PROPERTY_HOST_ADDRESS = "host";
 	public static final Object PROPERTY_HOST_PORT = "port";
+	public static final String PRODUCT_DB_NAME = "productDb.txt";
 }

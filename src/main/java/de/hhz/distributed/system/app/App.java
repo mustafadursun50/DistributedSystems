@@ -9,7 +9,9 @@ public class App {
 
 	public static void main(String args[]) throws IOException, InterruptedException, ClassNotFoundException {
 
+
 		int port = Integer.parseInt(System.getProperty("port"));
+
 		Server server = new Server(port);
 		new Thread(server).start();
 		FailureDedector failureDedector = new FailureDedector();

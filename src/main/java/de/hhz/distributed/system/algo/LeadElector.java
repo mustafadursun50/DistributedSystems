@@ -75,8 +75,8 @@ public class LeadElector {
 
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-		if (neihborProps == null) {
-			System.out.println("Server is leader");
+
+        if(neihborProps == null) {
 			this.mServer.setIsLeader(true);
 			this.mServer.setElectionRunning(false);
 			return;
