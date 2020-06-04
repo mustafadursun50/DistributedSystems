@@ -36,9 +36,8 @@ public class LeadElector {
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 		if (neihborProps == null) {
 			System.out.println("Server has no neihbor");
-			if(this.mMulticastReceiver.getKnownHosts().size()==0) {
+			if (this.mMulticastReceiver.getKnownHosts().size() == 0) {
 				this.mServer.setIsLeader(true);
-				System.out.println("Server is leader");
 			}
 			return;
 		}
@@ -47,7 +46,7 @@ public class LeadElector {
 		sb.append(MESSAGE_SEPARATOR);
 		sb.append(mServer.getUid());
 		System.out.println("Server " + mServer.getUid() + " initiate voting!");
-	
+
 		this.mServer.sendElectionMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 				Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
 	}
@@ -61,12 +60,12 @@ public class LeadElector {
 	 * @throws IOException
 	 */
 	public void handleVoting(String input) throws NumberFormatException, ClassNotFoundException, IOException {
-		
+
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
 		System.out.println("Sent: " + input + " --> " + this.mServer.getUid());
-
+		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = UUID.fromString((input.split(MESSAGE_SEPARATOR)[1]));
 		}
@@ -76,11 +75,12 @@ public class LeadElector {
 
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
-        if(neihborProps == null) {
-        	System.out.println("Server is leader");
+		if (neihborProps == null) {
+			System.out.println("Server is leader");
 			this.mServer.setIsLeader(true);
-        	return;
-        }
+			this.mServer.setElectionRunning(false);
+			return;
+		}
 		String host = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 		int port = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
@@ -100,10 +100,10 @@ public class LeadElector {
 		sb.append(MESSAGE_SEPARATOR);
 		// second round, compare received message with own id
 
-		//server should declare itself as coordinator or received coordination message
+		// server should declare itself as coordinator or received coordination message
 		if ((recvUid.compareTo(mServer.getUid()) == 0) || isCoorinationMsg) {
 			firstRound = true;// Election completed. Reset first round
-
+			this.mServer.setElectionRunning(false);
 			// coordination message was initiated by this server. End message transmission.
 			if ((recvUid.compareTo(mServer.getUid()) == 0) && isCoorinationMsg) {
 				return;
@@ -116,12 +116,13 @@ public class LeadElector {
 				// Server declare itself as coordinator
 				sb.append(this.mServer.getUid());
 				this.mServer.setIsLeader(true);
-				System.out.println("Election completed. " + this.mServer.getUid()+ " won! " +  LocalTime.now());
+				System.out.println("Election completed. " + this.mServer.getUid() + " won! " + LocalTime.now());
 				System.out.println("Now send COOR to anothers servers..");
 			}
 			sb.append(MESSAGE_SEPARATOR);
 			sb.append(MESSAGE_COOR);
 			this.mServer.sendElectionMessage(sb.toString(), host, port);
+			this.mServer.setElectionRunning(false);
 		} else if (recvUid.compareTo(this.mServer.getUid()) == 1) {
 			// Forward message to neihbor
 			sb.append(recvUid);
@@ -132,5 +133,5 @@ public class LeadElector {
 			this.mServer.sendElectionMessage(sb.toString(), host, port);
 		}
 
-	}	
+	}
 }
