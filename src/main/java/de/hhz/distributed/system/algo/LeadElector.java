@@ -38,7 +38,6 @@ public class LeadElector {
 			System.out.println("Server has no neihbor");
 			if(this.mMulticastReceiver.getKnownHosts().size()==0) {
 				this.mServer.setIsLeader(true);
-				System.out.println("Server is leader");
 			}
 			return;
 		}
@@ -77,7 +76,6 @@ public class LeadElector {
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
         if(neihborProps == null) {
-        	System.out.println("Server is leader");
 			this.mServer.setIsLeader(true);
         	return;
         }

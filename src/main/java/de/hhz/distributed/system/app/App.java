@@ -13,7 +13,8 @@ public class App {
 
 	public static void main(String args[]) throws IOException, InterruptedException, ClassNotFoundException {
 
-		int port = Integer.parseInt(System.getProperty("port"));
+	//	int port = Integer.parseInt(System.getProperty("port"));
+		int port = 400;
 		ProductDb.initializeDb();
 		Server server = new Server(port);
 		List<Server> servers = new ArrayList<Server>();

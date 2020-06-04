@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.hhz.distributed.system.app.Constants;
+
 public class ProductDb {
 
 	private static File fileDb;
@@ -14,7 +16,7 @@ public class ProductDb {
 	public static void initializeDb() {
 		try {
 			System.out.println("Initialize database..");
-			fileDb = new File("product.txt");
+			fileDb = new File(Constants.PRODUCT_DB_NAME);
 			if(fileDb.createNewFile()) {
 				String initalDbLoad =  10 +"," + 10 + "," + 10;
 				pw = new PrintWriter(fileDb);
@@ -74,7 +76,7 @@ public class ProductDb {
 
 	public static String getCurrentData() {
 		try {
-			return Files.readAllLines(Paths.get("productDb.txt")).get(0);
+			return Files.readAllLines(Paths.get(Constants.PRODUCT_DB_NAME)).get(0);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

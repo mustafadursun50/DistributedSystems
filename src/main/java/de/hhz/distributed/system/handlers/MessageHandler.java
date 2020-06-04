@@ -15,7 +15,6 @@ import de.hhz.distributed.system.db.ProductDb;
 public class MessageHandler implements Runnable {
 	private MulticastSocket mMulticastSocket;
 	private InetAddress group;
-	private FifoDeliver fifoDeliver;
 	private String message;
 	private String clientIp;
 	private int clientPort;
@@ -29,20 +28,14 @@ public class MessageHandler implements Runnable {
 		} catch (UnknownHostException e) {
 			e.printStackTrace();
 		}
-		this.fifoDeliver = new FifoDeliver();
 	}
 
-	public void run() {
-		
-		
-		
+	public void run() {		
 		try {
-			System.out.println("THIS: "+this.message);
 			if (ProductDb.updateProductDb(this.message)) {
-				String updatedDbData = fifoDeliver.assigneSequenceId();
-				this.sendClientMulticastMessage(updatedDbData);
+	//			this.sendClientMessage("OK", ip, port);
 			} else {
-				//this.sendClientMessage("NotSupportedMessageType..", this.clientIp, this.clientPort);
+	//			this.sendClientMessage("NOK", ip, port);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
