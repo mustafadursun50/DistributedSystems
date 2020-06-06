@@ -19,7 +19,6 @@ public class FailureDedector implements Runnable {
 	
 	public static void updateLastOkayTime() {
 		lastOkay = LocalTime.now();
-		System.out.println("update time");
 	}
 
 	public void run() {	

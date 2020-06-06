@@ -63,7 +63,10 @@ public class Server implements Runnable {
 						String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
 						System.out.println(uid + ": ping leader " + port);
-						sendTCPMessage(Constants.PING_LEADER, host, port);
+						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
+						if (answer != null) {
+							FailureDedector.updateLastOkayTime();
+						}
 					}
 					// ping replicates
 					else if (isLeader()) {
@@ -152,14 +155,14 @@ public class Server implements Runnable {
 			Socket socket = new Socket(hostAddress, port);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 			mObjectOutputStream.writeObject(message);
-			ObjectInputStream mObjectInputStream = new ObjectInputStream(this.mSocket.getInputStream());
+			ObjectInputStream mObjectInputStream = new ObjectInputStream(socket.getInputStream());
 			answer = (String) mObjectInputStream.readObject();
 			mObjectOutputStream.flush();
 			mObjectOutputStream.close();
 			mObjectInputStream.close();
 			socket.close();
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
 		return answer;
 	}
@@ -189,26 +192,27 @@ public class Server implements Runnable {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
-				mSocket.close();
-				if (input.contains("0,0,0,")) {
-					if(fifoDeliver.deliverAskedMessage(input)) {
-					//	System.out.println("askedMessage successfully sent");
-					}else {
+
+				if (input.equals(Constants.PING_LEADER)) {
+					sendMessage(Constants.PING_LEADER);
+				} else if (input.equals(Constants.PING_REPLICA)) {
+					sendMessage(Constants.PING_REPLICA);
+				} else if (input.contains("0,0,0,")) {
+					if (fifoDeliver.deliverAskedMessage(input)) {
+						// System.out.println("askedMessage successfully sent");
+					} else {
 						System.out.println("ERROR: askedMessage not successfully sent");
 					}
 
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					isElectionRunning = true;
 					this.mElector.handleVoting(input);
-				} else if (input.equals(Constants.PING_REPLICA)) {
-					// Remove failed members. Clean known host list
-				} else if (input.equals(Constants.PING_LEADER)) {
-					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg" + input);
 					new Thread(new MessageHandler(input, clientIp, this.port)).start();
 				}
+				this.mSocket.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
