@@ -13,6 +13,7 @@ public class App {
 
 		int port = Integer.parseInt(System.getProperty("port"));
 		//start server on the given port
+
 		Server server = new Server(port);
 		new Thread(server).start();
 		FailureDedector failureDedector = new FailureDedector();
