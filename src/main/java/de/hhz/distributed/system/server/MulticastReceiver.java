@@ -37,8 +37,8 @@ public class MulticastReceiver implements Runnable {
 		this.uid = uid;
 	}
 
-	public Properties getAdrressById(int uid) {
-		return this.getKnownHosts().get(String.valueOf(uid));
+	public Properties getAdressById(String uid) {
+		return this.getKnownHosts().get(uid);
 	}
 
 	public Map<String, Properties> getKnownHosts() {

@@ -19,6 +19,7 @@ public class FailureDedector implements Runnable {
 	
 	public static void updateLastOkayTime() {
 		lastOkay = LocalTime.now();
+		System.out.println("update time");
 	}
 
 	public void run() {	
@@ -27,8 +28,7 @@ public class FailureDedector implements Runnable {
 			LocalTime now = LocalTime.now();
     		long diffInSec = Duration.between(lastOkay, now).toSeconds();
     		if(diffInSec > Constants.MAX_PING_LIMIT_SEC) {
-    			notifyLeadElector();
-    		}
+    			notifyLeadElector();    		}
     	}		
 	}
 	

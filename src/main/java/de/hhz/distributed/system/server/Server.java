@@ -18,6 +18,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
+import de.hhz.distributed.system.algo.LeadElectorListener;
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.handlers.MessageHandler;
@@ -33,9 +34,10 @@ public class Server implements Runnable {
 	private Timer updateClientsTimer;
 	private UUID leadUid;
 	private boolean isLeader;
-
+	FailureDedector failureDedector;
 	private boolean isElectionRunning;
 	private FifoDeliver fifoDeliver;
+	LeadElectorListener mLeadElectorListener;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
@@ -45,7 +47,7 @@ public class Server implements Runnable {
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
 		this.fifoDeliver = new FifoDeliver();
-
+		doPing();
 	}
 
 	/**
@@ -55,16 +57,21 @@ public class Server implements Runnable {
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
-					if (isLeader) {
-						// server should ping itself if alone. Failure detector should not stop
-						if (mMulticastReceiver.getKnownHosts().size() == 0) {
-							sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host.getHostAddress(), port);
-						} else {
-							for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
-								String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
-								int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-								sendElectionMessage(Constants.PING_LEADER_TO_REPLICA, host, port);
-							}
+					// ping leader
+					if (!isLeader && (leadUid != null)) {
+						Properties p = mMulticastReceiver.getAdressById(leadUid.toString());
+						String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+						System.out.println(uid + ": ping leader " + port);
+						sendTCPMessage(Constants.PING_LEADER, host, port);
+					}
+					// ping replicates
+					else if (isLeader()) {
+						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
+							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+							System.out.println(port + ": ping replicate " + hostPort);
+							sendTCPMessage(Constants.PING_REPLICA, host, hostPort);
 						}
 					}
 				} catch (Exception e) {
@@ -109,8 +116,8 @@ public class Server implements Runnable {
 	 * @throws IOException
 	 * @throws ClassNotFoundException
 	 */
-	public void sendElectionMessage(final String message, String hostAddress, final int port)
-			throws ClassNotFoundException {
+	public void sendTCPMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
+
 		try {
 			Socket socket = new Socket(hostAddress, port);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -133,9 +140,28 @@ public class Server implements Runnable {
 				String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 				int neihgborPort = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
-				this.sendElectionMessage(message, neihgborHost, neihgborPort);
+				this.sendTCPMessage(message, neihgborHost, neihgborPort);
 			}
 		}
+	}
+
+	public String sendPingMessage(final String message, String hostAddress, final int port)
+			throws ClassNotFoundException {
+		String answer = null;
+		try {
+			Socket socket = new Socket(hostAddress, port);
+			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
+			mObjectOutputStream.writeObject(message);
+			ObjectInputStream mObjectInputStream = new ObjectInputStream(this.mSocket.getInputStream());
+			answer = (String) mObjectInputStream.readObject();
+			mObjectOutputStream.flush();
+			mObjectOutputStream.close();
+			mObjectInputStream.close();
+			socket.close();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		return answer;
 	}
 
 	/**
@@ -164,16 +190,19 @@ public class Server implements Runnable {
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
 				mSocket.close();
-
 				if (input.contains("0,0,0,")) {
 					boolean successfullSent = fifoDeliver.deliverAskedMessage(input);
 					System.out.println("updateMessage successfullSent: " + successfullSent);
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
+					isElectionRunning = true;
 					this.mElector.handleVoting(input);
-				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
+				} else if (input.equals(Constants.PING_REPLICA)) {
+					// Remove failed members. Clean known host list
+				} else if (input.equals(Constants.PING_LEADER)) {
 					FailureDedector.updateLastOkayTime();
 				} else {
 					System.out.println("client connection accepted");
+					System.out.println("handle msg" + input);
 					new Thread(new MessageHandler(input, clientIp, this.port)).start();
 				}
 			} catch (Exception e) {
@@ -196,8 +225,15 @@ public class Server implements Runnable {
 		return leadUid;
 	}
 
+	/**
+	 * set uid of leader
+	 * 
+	 * @param leadUid
+	 */
 	public void setLeadUid(UUID leadUid) {
 		this.leadUid = leadUid;
+		// start failure detector once the leader is known
+		isElectionRunning = false;// election completed. a new election can now be trigger.
 	}
 
 	public void setIsLeader(boolean isLeader) {
@@ -207,8 +243,8 @@ public class Server implements Runnable {
 		}
 		if (isLeader) {
 			System.out.println("server is leader:" + this.port);
+			// stop failure detector because the server becomes leader
 			ProductDb.initializeDb();
-			this.doPing();
 			this.isElectionRunning = false;
 			updateClientsTimer = new Timer();
 			System.out.println("start permanent client update..");
@@ -227,10 +263,10 @@ public class Server implements Runnable {
 
 		}
 	}
-	
+
 	private void permanentClientUpdate() throws IOException {
 		// prepare data
-		String dataWithSequenceId  = 	this.fifoDeliver.getCurrentDbDataWithUpdatedSequenceId();
+		String dataWithSequenceId = this.fifoDeliver.getCurrentDbDataWithUpdatedSequenceId();
 		String dataToSent = this.port + "," + dataWithSequenceId;
 		// sent data
 		MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
@@ -241,7 +277,14 @@ public class Server implements Runnable {
 		mMulticastSocket.send(msgPacket);
 		mMulticastSocket.close();
 	}
-	
+
+	public void stopLeading() {
+		System.out.println("Stop leading");
+		this.isLeader = false;
+		if (this.updateClientsTimer != null) {
+			this.updateClientsTimer.cancel();
+		}
+	}
 
 	public UUID getUid() {
 		return this.uid;

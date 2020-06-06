@@ -2,9 +2,6 @@ package de.hhz.distributed.system.algo;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import de.hhz.distributed.system.server.FailureDedector;
 import de.hhz.distributed.system.server.Server;
@@ -27,6 +24,11 @@ public class LeadElectorListener implements PropertyChangeListener {
 	 */
 	public void propertyChange(PropertyChangeEvent evt) {
 		if (server.isElectionRunning()) {
+			return;
+		}
+
+        //server has no neighbor
+		if (server.getMulticastReceiver().getKnownHosts().size() == 0) {
 			return;
 		}
 		System.out.println(evt.getPropertyName() + " occurred!!");

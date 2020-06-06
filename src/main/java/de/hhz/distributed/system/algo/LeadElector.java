@@ -47,7 +47,7 @@ public class LeadElector {
 		sb.append(mServer.getUid());
 		System.out.println("Server " + mServer.getUid() + " initiate voting!");
 
-		this.mServer.sendElectionMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
+		this.mServer.sendTCPMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 				Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
 	}
 
@@ -64,7 +64,7 @@ public class LeadElector {
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		System.out.println("Sent: " + input + " --> " + this.mServer.getUid());
+		System.out.println(this.mServer.getUid() + "<--------" + input);
 		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = UUID.fromString((input.split(MESSAGE_SEPARATOR)[1]));
@@ -76,7 +76,7 @@ public class LeadElector {
 		// receive from left neighbor
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 
-        if(neihborProps == null) {
+		if (neihborProps == null) {
 			this.mServer.setIsLeader(true);
 			this.mServer.setElectionRunning(false);
 			return;
@@ -84,17 +84,19 @@ public class LeadElector {
 		String host = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 		int port = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
-		// Send own uid in the first round
-		if (!isCoorinationMsg && firstRound) {
-			sb = new StringBuilder();
-			sb.append(LCR_PREFIX);
-			sb.append(MESSAGE_SEPARATOR);
-			sb.append(mServer.getUid());
-			this.idReceivedInFistRound = recvUid;
-			this.mServer.sendElectionMessage(sb.toString(), host, port);
-			firstRound = false;
-			return;
-		}
+//		// Send own uid in the first round
+//		if (!isCoorinationMsg && firstRound) {
+//			sb = new StringBuilder();
+//			sb.append(LCR_PREFIX);
+//			sb.append(MESSAGE_SEPARATOR);
+//			sb.append(mServer.getUid());
+//			this.idReceivedInFistRound = recvUid;
+//			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+//
+//			this.mServer.sendTCPMessage(sb.toString(), host, port);
+//			firstRound = false;
+//			return;
+//		}
 		sb = new StringBuilder();
 		sb.append(LCR_PREFIX);
 		sb.append(MESSAGE_SEPARATOR);
@@ -106,31 +108,43 @@ public class LeadElector {
 			this.mServer.setElectionRunning(false);
 			// coordination message was initiated by this server. End message transmission.
 			if ((recvUid.compareTo(mServer.getUid()) == 0) && isCoorinationMsg) {
+				this.mServer.setIsLeader(true);//Now start communication with clients
 				return;
 			}
 			this.mServer.setLeadUid(recvUid);
 			// Coordination message received. Forward the message to neihbor
 			if (isCoorinationMsg) {
 				sb.append(recvUid);
+
 			} else {
 				// Server declare itself as coordinator
 				sb.append(this.mServer.getUid());
-				this.mServer.setIsLeader(true);
 				System.out.println("Election completed. " + this.mServer.getUid() + " won! " + LocalTime.now());
 				System.out.println("Now send COOR to anothers servers..");
 			}
 			sb.append(MESSAGE_SEPARATOR);
 			sb.append(MESSAGE_COOR);
-			this.mServer.sendElectionMessage(sb.toString(), host, port);
+			this.mServer.sendTCPMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
+			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			if (isCoorinationMsg) {
+				mServer.stopLeading();
+				if (mServer.isLeader()) {
+					// Stop connection to data base
+
+				}
+			}
 		} else if (recvUid.compareTo(this.mServer.getUid()) == 1) {
 			// Forward message to neihbor
 			sb.append(recvUid);
-			this.mServer.sendElectionMessage(sb.toString(), host, port);
+			this.mServer.sendTCPMessage(sb.toString(), host, port);
+			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
-			this.mServer.sendElectionMessage(sb.toString(), host, port);
+			this.mServer.sendTCPMessage(sb.toString(), host, port);
+			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+
 		}
 
 	}
