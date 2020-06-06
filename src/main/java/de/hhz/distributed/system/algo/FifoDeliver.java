@@ -15,8 +15,9 @@ public class FifoDeliver {
 	private static long sequenceNo;
 	
 	public String getCurrentDbDataWithUpdatedSequenceId() {		
-		deliveryQueue.put(sequenceNo++, ProductDb.getCurrentData());
-		return sequenceNo + "," + deliveryQueue.get(sequenceNo);
+		deliveryQueue.put(++sequenceNo, ProductDb.getCurrentData());
+		String finalData = sequenceNo + "," + deliveryQueue.get(sequenceNo);
+		return finalData;
 	}
 	
 	public boolean deliverAskedMessage(String input) {
