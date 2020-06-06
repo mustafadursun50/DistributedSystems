@@ -10,7 +10,7 @@ public class App {
 	public static void main(String args[]) throws IOException, InterruptedException, ClassNotFoundException {
 
 
-		int port = Integer.parseInt(System.getProperty("port"));
+		int port = 800; 	//Integer.parseInt(System.getProperty("port"));
 
 		Server server = new Server(port);
 		new Thread(server).start();
