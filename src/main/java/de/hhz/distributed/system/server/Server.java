@@ -8,7 +8,6 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
+import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.handlers.MessageHandler;
 
 public class Server implements Runnable {
@@ -33,6 +33,8 @@ public class Server implements Runnable {
 	private Timer updateClientsTimer;
 	private UUID leadUid;
 	private boolean isLeader;
+
+	private boolean isElectionRunning;
 	private FifoDeliver fifoDeliver;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
@@ -43,7 +45,7 @@ public class Server implements Runnable {
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
 		this.fifoDeliver = new FifoDeliver();
-		doPing();
+
 	}
 
 	/**
@@ -148,7 +150,13 @@ public class Server implements Runnable {
 			e1.printStackTrace();
 		}
 		this.mMulticastReceiver.sendMulticastMessage();
+		try {
+			Thread.sleep(100);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
 		System.out.println("Server UID " + uid + " listing on " + this.host.getHostAddress() + ":" + this.port);
+		this.startVoting();
 
 		while (true) {
 			try {
@@ -176,6 +184,7 @@ public class Server implements Runnable {
 
 	public void startVoting() {
 		try {
+			this.isElectionRunning = true;
 			mElector.initiateVoting();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -198,6 +207,9 @@ public class Server implements Runnable {
 		}
 		if (isLeader) {
 			System.out.println("server is leader:" + this.port);
+			ProductDb.initializeDb();
+			this.doPing();
+			this.isElectionRunning = false;
 			updateClientsTimer = new Timer();
 			System.out.println("start permanent client update..");
 			TimerTask task = new TimerTask() {
@@ -241,5 +253,13 @@ public class Server implements Runnable {
 
 	public boolean isLeader() {
 		return this.isLeader;
+	}
+
+	public boolean isElectionRunning() {
+		return isElectionRunning;
+	}
+
+	public void setElectionRunning(boolean isElectionRunning) {
+		this.isElectionRunning = isElectionRunning;
 	}
 }

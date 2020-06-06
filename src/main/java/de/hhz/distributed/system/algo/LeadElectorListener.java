@@ -13,51 +13,23 @@ public class LeadElectorListener implements PropertyChangeListener {
 
 	boolean leadElectorHasToBeRun;
 	private FailureDedector failureDedector;
-	List<Server> servers;
+	Server server;
 	boolean voting = false;
 
-	public LeadElectorListener(FailureDedector failureDedector, List<Server> servers) {
+	public LeadElectorListener(FailureDedector failureDedector, Server server) {
 		this.failureDedector = failureDedector;
 		this.failureDedector.addChangeListener(this);
-		this.servers = servers;
+		this.server = server;
 	}
 
 	/**
 	 * Listening for StartLeadElectionEvent from FailureDedector.java
 	 */
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (voting) {
+		if (server.isElectionRunning()) {
 			return;
 		}
-		final Timer leaderElectedTimer = new Timer();
-
-		TimerTask task = new TimerTask() {
-			@Override
-			public void run() {
-				// Leader elected?
-				for (Server s : servers) {
-					if (s.isLeader()) {
-						voting = false;
-						leaderElectedTimer.cancel();
-						break;
-					}
-				}
-			}
-		};
-		voting = true;
-		// Get actual leader
-		Server leader = null;
-		for (Server s : servers) {
-			if (s.isLeader()) {
-				leader = s;
-				break;
-			}
-		}
-		if(servers.size()>1) {
-			servers.remove(leader);
-		}
 		System.out.println(evt.getPropertyName() + " occurred!!");
-		servers.get(0).startVoting();
-		leaderElectedTimer.schedule(task, 0, 40);
+		server.startVoting();
 	}
 }
