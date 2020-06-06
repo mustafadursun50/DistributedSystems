@@ -21,10 +21,11 @@ public class FifoDeliver {
 	}
 	
 	public boolean deliverAskedMessage(String input) {
-		long sequenceId = Long.parseLong(input.substring(5));
+		long sequenceId = Long.parseLong(input.substring(6));
 		String messageWithSequenceId = deliveryQueue.get(sequenceId) + "," + sequenceId;
 		try {
 			sendClientMulticastMessage(messageWithSequenceId);
+			System.out.println("for sequenceId: "+ sequenceId + "askedMessage succussfully sent: "+ deliveryQueue.get(sequenceId));
 		} catch (IOException e) {
 			return false;
 		}

@@ -166,8 +166,12 @@ public class Server implements Runnable {
 				mSocket.close();
 
 				if (input.contains("0,0,0,")) {
-					boolean successfullSent = fifoDeliver.deliverAskedMessage(input);
-					System.out.println("updateMessage successfullSent: " + successfullSent);
+					if(fifoDeliver.deliverAskedMessage(input)) {
+					//	System.out.println("askedMessage successfully sent");
+					}else {
+						System.out.println("ERROR: askedMessage not successfully sent");
+					}
+
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					this.mElector.handleVoting(input);
 				} else if (input.equals(Constants.PING_LEADER_TO_REPLICA)) {
