@@ -38,6 +38,7 @@ public class Server implements Runnable {
 	private boolean isElectionRunning;
 	private FifoDeliver fifoDeliver;
 	LeadElectorListener mLeadElectorListener;
+	int permanentUpdatedInterval;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
@@ -54,6 +55,7 @@ public class Server implements Runnable {
 	 * Leader send ping to replicas and say's i am here.
 	 */
 	public void doPing() {
+		System.out.println("Start Ping mechanism..");
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
@@ -62,7 +64,7 @@ public class Server implements Runnable {
 						Properties p = mMulticastReceiver.getAdressById(leadUid.toString());
 						String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-						System.out.println(uid + ": ping leader " + port);
+				//		System.out.println(uid + ": ping leader " + port);
 						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
 							FailureDedector.updateLastOkayTime();
@@ -73,7 +75,7 @@ public class Server implements Runnable {
 						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
 							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-							System.out.println(port + ": ping replicate " + hostPort);
+				//			System.out.println(port + ": ping replicate " + hostPort);
 							sendTCPMessage(Constants.PING_REPLICA, host, hostPort);
 						}
 					}
@@ -198,8 +200,9 @@ public class Server implements Runnable {
 				} else if (input.equals(Constants.PING_REPLICA)) {
 					sendMessage(Constants.PING_REPLICA);
 				} else if (input.contains("0,0,0,")) {
-					if (fifoDeliver.deliverAskedMessage(input)) {
-						// System.out.println("askedMessage successfully sent");
+					String missedMsg = fifoDeliver.deliverAskedMessage(input);
+					if (missedMsg != null && !missedMsg.isEmpty()) {
+						sendMessage(missedMsg);
 					} else {
 						System.out.println("ERROR: askedMessage not successfully sent");
 					}
@@ -209,7 +212,7 @@ public class Server implements Runnable {
 					this.mElector.handleVoting(input);
 				} else {
 					System.out.println("client connection accepted");
-					System.out.println("handle msg" + input);
+					System.out.println("handle msg: " + input);
 					new Thread(new MessageHandler(input, clientIp, this.port)).start();
 				}
 				this.mSocket.close();
@@ -224,7 +227,6 @@ public class Server implements Runnable {
 			this.isElectionRunning = true;
 			mElector.initiateVoting();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -250,7 +252,7 @@ public class Server implements Runnable {
 			updateClientsTimer.cancel();
 		}
 		if (isLeader) {
-			System.out.println("server is leader:" + this.port);
+			System.out.println("server is leader: "+this.port);
 			// stop failure detector because the server becomes leader
 			ProductDb.initializeDb();
 			this.isElectionRunning = false;
@@ -268,7 +270,6 @@ public class Server implements Runnable {
 				}
 			};
 			updateClientsTimer.schedule(task, 10, 800);
-
 		}
 	}
 

@@ -31,11 +31,11 @@ public class MessageHandler implements Runnable {
 	}
 
 	public void run() {		
-		try {
+		try { 
 			if (ProductDb.updateProductDb(this.message)) {
-	//			this.sendClientMessage("OK", ip, port);
+				this.sendClientMessage("OK", this.clientIp, this.clientPort);
 			} else {
-	//			this.sendClientMessage("NOK", ip, port);
+				this.sendClientMessage("NOK", this.clientIp, this.clientPort);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

@@ -22,12 +22,12 @@ public class FifoDeliver {
 		return finalData;
 	}
 	
-	public boolean deliverAskedMessage(String input) {
+	public String deliverAskedMessage(String input) {
 		long sequenceId = Long.parseLong(input.substring(6));
 		String messageWithSequenceId = deliveryQueue.get(sequenceId) + "," + sequenceId;
-		sentTCPToClient(messageWithSequenceId);
-		System.out.println("for sequenceId: "+ sequenceId + "askedMessage succussfully sent: "+ deliveryQueue.get(sequenceId));
-		 return true;
+		//sentTCPToClient(messageWithSequenceId);
+		System.out.println("for sequenceId: "+ sequenceId + " askedMsg will be: "+ deliveryQueue.get(sequenceId));
+		 return messageWithSequenceId;
 	}
 	
 	private void sendClientMulticastMessage(String productUpdate) throws IOException {

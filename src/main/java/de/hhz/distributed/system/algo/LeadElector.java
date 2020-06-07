@@ -64,7 +64,7 @@ public class LeadElector {
 		UUID recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		System.out.println(this.mServer.getUid() + "<--------" + input);
+		//System.out.println(this.mServer.getUid() + "<--------" + input);
 		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = UUID.fromString((input.split(MESSAGE_SEPARATOR)[1]));
@@ -126,7 +126,7 @@ public class LeadElector {
 			sb.append(MESSAGE_COOR);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
-			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+		//	System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 			if (isCoorinationMsg) {
 				mServer.stopLeading();
 				if (mServer.isLeader()) {
@@ -138,12 +138,12 @@ public class LeadElector {
 			// Forward message to neihbor
 			sb.append(recvUid);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+	//		System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+	//		System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
 		}
 

@@ -17,7 +17,6 @@ public class ProductDb {
 		try {
 			fileDb = new File(Constants.PRODUCT_DB_NAME);
 			if(!fileDb.exists()) {
-				System.out.println("Initialize database..");
 				fileDb.createNewFile();
 				String initalDbLoad =  10 +"," + 10 + "," + 10;
 				pw = new PrintWriter(fileDb);
@@ -29,6 +28,7 @@ public class ProductDb {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		System.out.println("database initialized.");
 	}
 	
 	
