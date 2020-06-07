@@ -254,7 +254,6 @@ public class Server implements Runnable {
 		if (isLeader) {
 			System.out.println("server is leader: "+this.port);
 			// stop failure detector because the server becomes leader
-			ProductDb.initializeDb();
 			this.isElectionRunning = false;
 			updateClientsTimer = new Timer();
 			System.out.println("start permanent client update..");
