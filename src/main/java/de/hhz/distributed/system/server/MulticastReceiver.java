@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.UUID;
 
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
@@ -21,13 +20,13 @@ public class MulticastReceiver implements Runnable {
 	private InetAddress group;
 	private byte[] buf = new byte[256];
 	private int serverPort;
-	UUID uid;
+	String uid;
 	String neighborUid;
 
 	// List of host uid with ip and ports
 	Map<String, Properties> knownHosts = new HashMap<String, Properties>();
 
-	public MulticastReceiver(UUID uid, int port) {
+	public MulticastReceiver(String uid, int port) {
 		try {
 			group = InetAddress.getByName(Constants.SERVER_MULTICAST_ADDRESS);
 		} catch (UnknownHostException e) {
@@ -63,7 +62,7 @@ public class MulticastReceiver implements Runnable {
 			// Get my position in the list
 			int pos = -1;
 			for (int i = 0; i < uuids.size(); i++) {
-				if (uuids.get(i).equals(this.uid.toString())) {
+				if (uuids.get(i).equals(this.uid)) {
 					pos = i;
 					break;
 				}

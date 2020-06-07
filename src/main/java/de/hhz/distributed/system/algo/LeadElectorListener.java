@@ -23,15 +23,15 @@ public class LeadElectorListener implements PropertyChangeListener {
 	 * Listening for StartLeadElectionEvent from FailureDedector.java
 	 */
 	public void propertyChange(PropertyChangeEvent evt) {
-		if (server.isElectionRunning()) {
-			return;
-		}
-
-        //server has no neighbor
-		if (server.getMulticastReceiver().getKnownHosts().size() == 0) {
-			return;
-		}
-		System.out.println(evt.getPropertyName() + " occurred!!");
-		server.startVoting();
+//		if (server.isElectionRunning()) {
+//			return;
+//		}
+//
+//        //server has no neighbor
+//		if (server.getMulticastReceiver().getKnownHosts().size() == 0) {
+//			return;
+//		}
+//		System.out.println(evt.getPropertyName() + " occurred!!");
+//		server.startVoting();
 	}
 }

@@ -25,13 +25,13 @@ import de.hhz.distributed.system.handlers.MessageHandler;
 public class Server implements Runnable {
 	private ServerSocket mServerSocket;
 	private Socket mSocket;
-	private UUID uid;
+	private String uid;
 	private MulticastReceiver mMulticastReceiver;
 	private InetAddress host = InetAddress.getLocalHost();
 	private int port;
 	private LeadElector mElector;
 	private Timer updateClientsTimer;
-	private UUID leadUid;
+	private String leadUid;
 	private boolean isLeader;
 	FailureDedector failureDedector;
 	private boolean isElectionRunning;
@@ -42,7 +42,11 @@ public class Server implements Runnable {
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
 		this.mServerSocket = new ServerSocket(port);
-		this.uid = UUID.randomUUID();
+		StringBuilder sb = new StringBuilder();
+		sb.append(host.getHostAddress());
+		sb.append("-");
+		sb.append(port);
+		this.uid = sb.toString();
 		this.port = port;
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
@@ -74,7 +78,7 @@ public class Server implements Runnable {
 							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
 							String answer = sendPingMessage(Constants.PING_REPLICA, host, hostPort);
-							
+
 						}
 					}
 				} catch (Exception e) {
@@ -229,7 +233,7 @@ public class Server implements Runnable {
 		}
 	}
 
-	public UUID getLeadUid() {
+	public String getLeadUid() {
 		return leadUid;
 	}
 
@@ -238,7 +242,7 @@ public class Server implements Runnable {
 	 * 
 	 * @param leadUid
 	 */
-	public void setLeadUid(UUID leadUid) {
+	public void setLeadUid(String leadUid) {
 		this.leadUid = leadUid;
 		// start failure detector once the leader is known
 		isElectionRunning = false;// election completed. a new election can now be trigger.
@@ -250,7 +254,7 @@ public class Server implements Runnable {
 			updateClientsTimer.cancel();
 		}
 		if (isLeader) {
-			System.out.println("server is leader: "+this.port);
+			System.out.println("server is leader: " + this.port);
 			// stop failure detector because the server becomes leader
 			this.isElectionRunning = false;
 			updateClientsTimer = new Timer();
@@ -292,7 +296,7 @@ public class Server implements Runnable {
 		}
 	}
 
-	public UUID getUid() {
+	public String getUid() {
 		return this.uid;
 	}
 

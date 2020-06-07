@@ -61,13 +61,13 @@ public class LeadElector {
 	 */
 	public void handleVoting(String input) throws NumberFormatException, ClassNotFoundException, IOException {
 
-		UUID recvUid = null;
+		String recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		//System.out.println(this.mServer.getUid() + "<--------" + input);
+		// System.out.println(this.mServer.getUid() + "<--------" + input);
 		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
-			recvUid = UUID.fromString((input.split(MESSAGE_SEPARATOR)[1]));
+			recvUid = input.split(MESSAGE_SEPARATOR)[1];
 		}
 		if (input.split(MESSAGE_SEPARATOR).length == 3 && input.contains(MESSAGE_COOR)) {
 			isCoorinationMsg = true;
@@ -103,12 +103,12 @@ public class LeadElector {
 		// second round, compare received message with own id
 
 		// server should declare itself as coordinator or received coordination message
-		if ((recvUid.compareTo(mServer.getUid()) == 0) || isCoorinationMsg) {
+		if (recvUid.equals(mServer.getUid()) || isCoorinationMsg) {
 			firstRound = true;// Election completed. Reset first round
 			this.mServer.setElectionRunning(false);
 			// coordination message was initiated by this server. End message transmission.
-			if ((recvUid.compareTo(mServer.getUid()) == 0) && isCoorinationMsg) {
-				this.mServer.setIsLeader(true);//Now start communication with clients
+			if (recvUid.equals(mServer.getUid()) && isCoorinationMsg) {
+				this.mServer.setIsLeader(true);// Now start communication with clients
 				return;
 			}
 			this.mServer.setLeadUid(recvUid);
@@ -126,7 +126,7 @@ public class LeadElector {
 			sb.append(MESSAGE_COOR);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
-		//	System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 			if (isCoorinationMsg) {
 				mServer.stopLeading();
 				if (mServer.isLeader()) {
@@ -134,16 +134,16 @@ public class LeadElector {
 
 				}
 			}
-		} else if (recvUid.compareTo(this.mServer.getUid()) == 1) {
+		} else if (recvUid.compareTo(this.mServer.getUid()) > 0) {
 			// Forward message to neihbor
 			sb.append(recvUid);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-	//		System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-	//		System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
 		}
 
