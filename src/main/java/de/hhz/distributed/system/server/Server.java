@@ -20,7 +20,6 @@ import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.algo.LeadElectorListener;
 import de.hhz.distributed.system.app.Constants;
-import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.handlers.MessageHandler;
 
 public class Server implements Runnable {
@@ -64,7 +63,6 @@ public class Server implements Runnable {
 						Properties p = mMulticastReceiver.getAdressById(leadUid.toString());
 						String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-				//		System.out.println(uid + ": ping leader " + port);
 						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
 							FailureDedector.updateLastOkayTime();
@@ -75,8 +73,8 @@ public class Server implements Runnable {
 						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
 							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-				//			System.out.println(port + ": ping replicate " + hostPort);
-							sendTCPMessage(Constants.PING_REPLICA, host, hostPort);
+							String answer = sendPingMessage(Constants.PING_REPLICA, host, hostPort);
+							
 						}
 					}
 				} catch (Exception e) {
