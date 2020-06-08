@@ -11,14 +11,11 @@ import java.net.Socket;
 import java.util.Properties;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.UUID;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
-import de.hhz.distributed.system.algo.LeadElectorListener;
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.handlers.MessageHandler;
 
@@ -33,11 +30,10 @@ public class Server implements Runnable {
 	private Timer updateClientsTimer;
 	private String leadUid;
 	private boolean isLeader;
-	FailureDedector failureDedector;
 	private boolean isElectionRunning;
 	private FifoDeliver fifoDeliver;
-	LeadElectorListener mLeadElectorListener;
 	int permanentUpdatedInterval;
+	int pingErrorCounter;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
@@ -69,8 +65,17 @@ public class Server implements Runnable {
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
 						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
-							FailureDedector.updateLastOkayTime();
+							System.out.println("ping ok " + port);
+							// FailureDedector.updateLastOkayTime();
+							pingErrorCounter = 0;
+						} else {
+							System.out.println("ping nok " + port);
+							if (pingErrorCounter == (Constants.MAX_PING_LIMIT_SEC / Constants.PING_INTERVALL_SEC)) {
+								startVoting();
+							}
+							pingErrorCounter++;
 						}
+
 					}
 					// ping replicates
 					else if (isLeader()) {
@@ -136,11 +141,15 @@ public class Server implements Runnable {
 			// Member could not be reached
 			// Clean list an
 			if (message.startsWith(LeadElector.LCR_PREFIX)) {
+				e.printStackTrace();
 				this.mMulticastReceiver.removeNeighbor();
+				System.out.println(
+						"Server " + hostAddress + ":" + port + " Could not be reached. Remove from known host");
 				// Send election to next neighbor
 				Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 				if (neihborProps == null) {
 					this.setIsLeader(true);
+					System.out.println("server has no more neihbor");
 					// Server has no neighbor and should delacre itself as leader
 					return;
 				}
@@ -166,7 +175,6 @@ public class Server implements Runnable {
 			mObjectInputStream.close();
 			socket.close();
 		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return answer;
 	}
@@ -184,7 +192,7 @@ public class Server implements Runnable {
 		}
 		this.mMulticastReceiver.sendMulticastMessage();
 		try {
-			Thread.sleep(100);
+			Thread.sleep(300);
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}

@@ -64,7 +64,8 @@ public class LeadElector {
 		String recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		// System.out.println(this.mServer.getUid() + "<--------" + input);
+		System.out.println(this.mServer.getUid()+"="+mServer.getMulticastReceiver().getNeihbor());
+		 System.out.println(this.mServer.getUid() + "<--------" + input);
 		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = input.split(MESSAGE_SEPARATOR)[1];
@@ -120,17 +121,16 @@ public class LeadElector {
 				// Server declare itself as coordinator
 				sb.append(this.mServer.getUid());
 				System.out.println("Election completed. " + this.mServer.getUid() + " won! " + LocalTime.now());
-				System.out.println("Now send COOR to anothers servers..");
 			}
 			sb.append(MESSAGE_SEPARATOR);
 			sb.append(MESSAGE_COOR);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
-			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+
 			if (isCoorinationMsg) {
-				mServer.stopLeading();
 				if (mServer.isLeader()) {
-					// Stop connection to data base
+					mServer.stopLeading();
 
 				}
 			}
@@ -138,12 +138,12 @@ public class LeadElector {
 			// Forward message to neihbor
 			sb.append(recvUid);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			// System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
 		}
 
