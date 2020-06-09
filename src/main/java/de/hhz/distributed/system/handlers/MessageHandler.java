@@ -1,65 +1,52 @@
 package de.hhz.distributed.system.handlers;
 
 import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.MulticastSocket;
-import java.net.Socket;
-import java.net.UnknownHostException;
 
 import de.hhz.distributed.system.algo.FifoDeliver;
-import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
+import de.hhz.distributed.system.server.Sender;
 
 public class MessageHandler implements Runnable {
-	private MulticastSocket mMulticastSocket;
-	private InetAddress group;
-	private String message;
+	private String inputMsg;
 	private String clientIp;
 	private int clientPort;
+	private Sender sender;
+	private FifoDeliver fifoDeliver;
 
 	public MessageHandler(String input, String clientIp, int serverPort) {
-		this.message = input;
+		this.inputMsg = input;
 		this.clientIp = clientIp;
 		this.clientPort = serverPort;
-		try {
-			group = InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS);
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
+		this.sender = new Sender();
+		this.fifoDeliver = new FifoDeliver();
 	}
 
 	public void run() {		
-		try { 
-			if (ProductDb.updateProductDb(this.message)) {
+		try {
+			if(inputMsg.startsWith("0,0,0,")) {
+				String missedMsg = fifoDeliver.deliverAskedMessage(inputMsg);
+				if (missedMsg != null && !missedMsg.isEmpty()) {
+					sender.sendTCPMessage(missedMsg, clientIp, clientPort);
+				} else {
+					System.out.println("ERROR: askedMessage not successfully sent");
+				}
+			}else {
+			if (ProductDb.updateProductDb(this.inputMsg)) {
 				this.sendClientMessage("OK", this.clientIp, this.clientPort);
 			} else {
 				this.sendClientMessage("NOK", this.clientIp, this.clientPort);
 			}
+		}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-
-	private void sendClientMulticastMessage(String productUpdate) throws IOException {
-	MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
-		StringBuilder sb = new StringBuilder();
-		sb.append(productUpdate);
-		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
-				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
-		mMulticastSocket.send(msgPacket);
-		mMulticastSocket.close();
-	}
-
-	private void sendClientMessage(final String message, String hostAddress, final int port) {
+	
+	private void sendClientMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
 		try {
-			Socket socket = new Socket(hostAddress, port);
-			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-			mObjectOutputStream.writeObject(message);
-			mObjectOutputStream.flush();
-			mObjectOutputStream.close();
-			socket.close();
+			sender.sendTCPMessage(message, hostAddress, port);
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

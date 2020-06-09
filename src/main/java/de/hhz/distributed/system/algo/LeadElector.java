@@ -3,8 +3,6 @@ package de.hhz.distributed.system.algo;
 import java.io.IOException;
 import java.time.LocalTime;
 import java.util.Properties;
-import java.util.TimerTask;
-import java.util.UUID;
 
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.server.MulticastReceiver;
@@ -19,6 +17,7 @@ public class LeadElector {
 	private Server mServer;
 	private boolean firstRound = true;
 	private String idReceivedInFistRound;
+
 
 	public LeadElector(Server server) {
 		this.mMulticastReceiver = server.getMulticastReceiver();
@@ -48,7 +47,7 @@ public class LeadElector {
 		sb.append(mServer.getUid());
 		System.out.println("Server " + mServer.getUid() + " initiate voting!");
 
-		this.mServer.sendTCPMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
+		this.mServer.sendVotingMessage(sb.toString(), neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString(),
 				Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString()));
 	}
 
@@ -124,7 +123,7 @@ public class LeadElector {
 			}
 			sb.append(MESSAGE_SEPARATOR);
 			sb.append(MESSAGE_COOR);
-			this.mServer.sendTCPMessage(sb.toString(), host, port);
+			this.mServer.sendVotingMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
 //			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
@@ -137,14 +136,14 @@ public class LeadElector {
 		} else if (recvUid.compareTo(this.mServer.getUid()) > 0) {
 			// Forward message to neihbor
 			sb.append(recvUid);
-			this.mServer.sendTCPMessage(sb.toString(), host, port);
+
+			this.mServer.sendVotingMessage(sb.toString(), host, port);
 //			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
-			this.mServer.sendTCPMessage(sb.toString(), host, port);
+			this.mServer.sendVotingMessage(sb.toString(), host, port);
 //			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
-
 		}
 
 	}
