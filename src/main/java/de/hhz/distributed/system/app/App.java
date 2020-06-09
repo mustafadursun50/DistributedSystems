@@ -14,5 +14,6 @@ public class App {
 		int port = Integer.parseInt(args[0]);
 		Server server = new Server(port);
 		new Thread(server).start();
+		
 	}
 }

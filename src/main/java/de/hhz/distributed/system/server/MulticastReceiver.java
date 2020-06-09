@@ -58,6 +58,7 @@ public class MulticastReceiver implements Runnable {
 		if (knownHosts.size() > 0) {
 			List<String> uuids = new ArrayList<String>(knownHosts.keySet());
 			// Sort list
+			uuids.add(this.uid);
 			Collections.sort(uuids);
 			// Get my position in the list
 			int pos = -1;

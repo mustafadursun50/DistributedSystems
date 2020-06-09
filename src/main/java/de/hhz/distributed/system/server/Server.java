@@ -65,7 +65,6 @@ public class Server implements Runnable {
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
 						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
-							System.out.println("ping ok " + port);
 							// FailureDedector.updateLastOkayTime();
 							pingErrorCounter = 0;
 						} else {
@@ -127,9 +126,10 @@ public class Server implements Runnable {
 	 * @param port
 	 * @throws IOException
 	 * @throws ClassNotFoundException
+	 * @throws InterruptedException 
 	 */
 	public void sendTCPMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
-
+     
 		try {
 			Socket socket = new Socket(hostAddress, port);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
@@ -197,7 +197,11 @@ public class Server implements Runnable {
 			e1.printStackTrace();
 		}
 		System.out.println("Server UID " + uid + " listing on " + this.host.getHostAddress() + ":" + this.port);
-		this.startVoting();
+		// Start election if host has a neighbor
+		if (mMulticastReceiver.getKnownHosts().size() > 0) {
+			this.startVoting();
+
+		}
 
 		while (true) {
 			try {
@@ -233,11 +237,13 @@ public class Server implements Runnable {
 	}
 
 	public void startVoting() {
-		try {
-			this.isElectionRunning = true;
-			mElector.initiateVoting();
-		} catch (Exception e) {
-			e.printStackTrace();
+		if (!this.isElectionRunning) {
+			try {
+				this.isElectionRunning = true;
+				mElector.initiateVoting();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -18,7 +18,7 @@ public class LeadElector {
 	private MulticastReceiver mMulticastReceiver;
 	private Server mServer;
 	private boolean firstRound = true;
-	private UUID idReceivedInFistRound;
+	private String idReceivedInFistRound;
 
 	public LeadElector(Server server) {
 		this.mMulticastReceiver = server.getMulticastReceiver();
@@ -33,6 +33,7 @@ public class LeadElector {
 	 * @throws IOException
 	 */
 	public void initiateVoting() throws Exception {
+		
 		Properties neihborProps = this.mMulticastReceiver.getNeihbor();
 		if (neihborProps == null) {
 			System.out.println("Server has no neihbor");
@@ -64,8 +65,7 @@ public class LeadElector {
 		String recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;
-		System.out.println(this.mServer.getUid()+"="+mServer.getMulticastReceiver().getNeihbor());
-		 System.out.println(this.mServer.getUid() + "<--------" + input);
+//		 System.out.println(this.mServer.getUid() + "<--------" + input);
 		this.mServer.setElectionRunning(true);
 		if (input.split(MESSAGE_SEPARATOR).length > 1) {
 			recvUid = input.split(MESSAGE_SEPARATOR)[1];
@@ -85,8 +85,8 @@ public class LeadElector {
 		String host = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 		int port = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
-//		// Send own uid in the first round
-//		if (!isCoorinationMsg && firstRound) {
+		// Send own uid in the first round
+//		if (firstRound) {
 //			sb = new StringBuilder();
 //			sb.append(LCR_PREFIX);
 //			sb.append(MESSAGE_SEPARATOR);
@@ -126,7 +126,7 @@ public class LeadElector {
 			sb.append(MESSAGE_COOR);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
 			this.mServer.setElectionRunning(false);
-			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+//			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
 			if (isCoorinationMsg) {
 				if (mServer.isLeader()) {
@@ -138,12 +138,12 @@ public class LeadElector {
 			// Forward message to neihbor
 			sb.append(recvUid);
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+//			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 		} else {
 			// Forward message to own uid
 			sb.append(mServer.getUid());
 			this.mServer.sendTCPMessage(sb.toString(), host, port);
-			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
+//			 System.out.println(this.mServer.getUid() + "------>" + sb.toString());
 
 		}
 
