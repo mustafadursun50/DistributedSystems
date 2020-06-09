@@ -2,10 +2,7 @@ package de.hhz.distributed.system.server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.MulticastSocket;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
@@ -14,6 +11,7 @@ import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
@@ -34,6 +32,7 @@ public class Server implements Runnable {
 	private FifoDeliver fifoDeliver;
 	int permanentUpdatedInterval;
 	int pingErrorCounter;
+	private Sender sender;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 
@@ -47,6 +46,7 @@ public class Server implements Runnable {
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
 		this.fifoDeliver = new FifoDeliver();
+		this.sender = new Sender();
 		doPing();
 	}
 
@@ -63,9 +63,8 @@ public class Server implements Runnable {
 						Properties p = mMulticastReceiver.getAdressById(leadUid.toString());
 						String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-						String answer = sendPingMessage(Constants.PING_LEADER, host, port);
+						String answer = sender.sendAndReceiveTCPMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
-							System.out.println("ping ok " + port);
 							// FailureDedector.updateLastOkayTime();
 							pingErrorCounter = 0;
 						} else {
@@ -75,15 +74,13 @@ public class Server implements Runnable {
 							}
 							pingErrorCounter++;
 						}
-
 					}
 					// ping replicates
 					else if (isLeader()) {
 						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
 							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-							String answer = sendPingMessage(Constants.PING_REPLICA, host, hostPort);
-
+							String answer = sender.sendAndReceiveTCPMessage(Constants.PING_REPLICA, host, hostPort);
 						}
 					}
 				} catch (Exception e) {
@@ -96,13 +93,6 @@ public class Server implements Runnable {
 		service.scheduleAtFixedRate(runnable, Constants.START_FIRST_PING_AFTER_SEC, Constants.PING_INTERVALL_SEC,
 				TimeUnit.SECONDS);
 
-	}
-
-	private synchronized void sendMessage(final String message) throws IOException {
-		ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(this.mSocket.getOutputStream());
-		mObjectOutputStream.writeObject(message);
-		mObjectOutputStream.flush();
-		mObjectOutputStream.close();
 	}
 
 	private String readMessage() throws IOException, ClassNotFoundException {
@@ -120,23 +110,10 @@ public class Server implements Runnable {
 		this.mMulticastReceiver.close();
 	}
 
-	/**
-	 * Send msg as client
-	 * 
-	 * @param message
-	 * @param port
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 */
-	public void sendTCPMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
+	public void sendVotingMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
 
 		try {
-			Socket socket = new Socket(hostAddress, port);
-			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-			mObjectOutputStream.writeObject(message);
-			mObjectOutputStream.flush();
-			mObjectOutputStream.close();
-			socket.close();
+			sender.sendTCPMessage(message, hostAddress, port);
 		} catch (IOException e) {
 			// Member could not be reached
 			// Clean list an
@@ -156,27 +133,9 @@ public class Server implements Runnable {
 				String neihgborHost = neihborProps.get(Constants.PROPERTY_HOST_ADDRESS).toString();
 				int neihgborPort = Integer.parseInt(neihborProps.get(Constants.PROPERTY_HOST_PORT).toString());
 
-				this.sendTCPMessage(message, neihgborHost, neihgborPort);
+				this.sendVotingMessage(message, neihgborHost, neihgborPort);
 			}
 		}
-	}
-
-	public String sendPingMessage(final String message, String hostAddress, final int port)
-			throws ClassNotFoundException {
-		String answer = null;
-		try {
-			Socket socket = new Socket(hostAddress, port);
-			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
-			mObjectOutputStream.writeObject(message);
-			ObjectInputStream mObjectInputStream = new ObjectInputStream(socket.getInputStream());
-			answer = (String) mObjectInputStream.readObject();
-			mObjectOutputStream.flush();
-			mObjectOutputStream.close();
-			mObjectInputStream.close();
-			socket.close();
-		} catch (Exception e) {
-		}
-		return answer;
 	}
 
 	/**
@@ -204,19 +163,10 @@ public class Server implements Runnable {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
 				String clientIp = mSocket.getInetAddress().getHostAddress();
-
 				if (input.equals(Constants.PING_LEADER)) {
-					sendMessage(Constants.PING_LEADER);
+					sender.sendTCPMessage(Constants.PING_LEADER, this.mSocket);
 				} else if (input.equals(Constants.PING_REPLICA)) {
-					sendMessage(Constants.PING_REPLICA);
-				} else if (input.contains("0,0,0,")) {
-					String missedMsg = fifoDeliver.deliverAskedMessage(input);
-					if (missedMsg != null && !missedMsg.isEmpty()) {
-						sendMessage(missedMsg);
-					} else {
-						System.out.println("ERROR: askedMessage not successfully sent");
-					}
-
+					sender.sendTCPMessage(Constants.PING_REPLICA, this.mSocket);
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					isElectionRunning = true;
 					this.mElector.handleVoting(input);
@@ -283,17 +233,9 @@ public class Server implements Runnable {
 	}
 
 	private void permanentClientUpdate() throws IOException {
-		// prepare data
 		String dataWithSequenceId = this.fifoDeliver.getCurrentDbDataWithUpdatedSequenceId();
 		String dataToSent = this.port + "," + dataWithSequenceId;
-		// sent data
-		MulticastSocket mMulticastSocket = new MulticastSocket(Constants.CLIENT_MULTICAST_PORT);
-		StringBuilder sb = new StringBuilder();
-		sb.append(dataToSent);
-		DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
-				InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
-		mMulticastSocket.send(msgPacket);
-		mMulticastSocket.close();
+		sender.sendMultiCastMessage(dataToSent, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 	}
 
 	public void stopLeading() {
