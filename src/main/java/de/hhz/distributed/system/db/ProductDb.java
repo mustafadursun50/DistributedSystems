@@ -24,7 +24,7 @@ public class ProductDb {
 				pw.close();
 				System.out.println("database initialized.");
 			} else {
-				System.out.println("database already there");
+				System.out.println("database already there..");
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
