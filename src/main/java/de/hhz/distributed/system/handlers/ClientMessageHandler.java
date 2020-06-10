@@ -44,7 +44,7 @@ public class ClientMessageHandler implements Runnable {
 			}
 			else {
 				System.out.println("Not supportd msg type");
-				this.sendClientMessage("responseOrder,NotSupportedMsgType", this.clientIp, this.clientPort);
+				this.sendClientMessage("NotSupportedMsgType", this.clientIp, this.clientPort);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
