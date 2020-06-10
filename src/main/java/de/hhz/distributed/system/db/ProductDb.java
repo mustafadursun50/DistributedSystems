@@ -22,13 +22,15 @@ public class ProductDb {
 				pw = new PrintWriter(fileDb);
 				pw.println(initalDbLoad);
 				pw.close();
+				System.out.println("database initialized.");
+			} else {
+				System.out.println("database already there");
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println("database initialized.");
 	}
 	
 	
