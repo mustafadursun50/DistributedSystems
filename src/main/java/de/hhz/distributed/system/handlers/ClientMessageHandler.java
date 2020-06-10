@@ -32,14 +32,14 @@ public class ClientMessageHandler implements Runnable {
 					System.out.println("ERROR: askedMessage not successfully sent");
 				}
 			}
-			else if (inputMsg.startsWith("postOrder")) {
+			else if (inputMsg.startsWith("requestOrder")) {
 				if(ProductDb.updateProductDb(this.inputMsg)) {
 					String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
 					this.sendClientUdp(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
-					this.sendClientMessage("OK", this.clientIp, this.clientPort);
+					this.sendClientMessage("responseOrder,OK", this.clientIp, this.clientPort);
 				}
 				else {
-					this.sendClientMessage("NOK", this.clientIp, this.clientPort);
+					this.sendClientMessage("responseOrder,NOK", this.clientIp, this.clientPort);
 				}
 			}
 			else {
