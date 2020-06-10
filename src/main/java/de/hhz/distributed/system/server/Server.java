@@ -6,16 +6,13 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Properties;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
-import de.hhz.distributed.system.handlers.MessageHandler;
+import de.hhz.distributed.system.handlers.ClientMessageHandler;
 
 public class Server implements Runnable {
 	private ServerSocket mServerSocket;
@@ -25,11 +22,9 @@ public class Server implements Runnable {
 	private InetAddress host = InetAddress.getLocalHost();
 	private int port;
 	private LeadElector mElector;
-	private Timer updateClientsTimer;
 	private String leadUid;
 	private boolean isLeader;
 	private boolean isElectionRunning;
-	private FifoDeliver fifoDeliver;
 	int permanentUpdatedInterval;
 	int pingErrorCounter;
 	private Sender sender;
@@ -45,7 +40,6 @@ public class Server implements Runnable {
 		this.port = port;
 		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
 		this.mElector = new LeadElector(this);
-		this.fifoDeliver = new FifoDeliver();
 		this.sender = new Sender();
 		doPing();
 	}
@@ -65,7 +59,6 @@ public class Server implements Runnable {
 						int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
 						String answer = sender.sendAndReceiveTCPMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
-							// FailureDedector.updateLastOkayTime();
 							pingErrorCounter = 0;
 						} else {
 							System.out.println("ping nok " + port);
@@ -101,24 +94,10 @@ public class Server implements Runnable {
 		return s;
 	}
 
-	public int getPort() {
-		return this.port;
-	}
-
 	public void close() throws IOException {
 		this.mServerSocket.close();
 		this.mMulticastReceiver.close();
 	}
-
-	/**
-	 * Send msg as client
-	 * 
-	 * @param message
-	 * @param port
-	 * @throws IOException
-	 * @throws ClassNotFoundException
-	 * @throws InterruptedException 
-	 */
 
 	public void sendVotingMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
 
@@ -187,7 +166,7 @@ public class Server implements Runnable {
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg: " + input);
-					new Thread(new MessageHandler(input, clientIp, this.port)).start();
+					new Thread(new ClientMessageHandler(input, clientIp, this.port)).start();
 				}
 				this.mSocket.close();
 			} catch (Exception e) {
@@ -207,59 +186,33 @@ public class Server implements Runnable {
 		}
 	}
 
-	public String getLeadUid() {
-		return leadUid;
-	}
 
-	/**
-	 * set uid of leader
-	 * 
-	 * @param leadUid
-	 */
-	public void setLeadUid(String leadUid) {
-		this.leadUid = leadUid;
-		// start failure detector once the leader is known
-		isElectionRunning = false;// election completed. a new election can now be trigger.
+	public int getPort() {
+		return this.port;
 	}
-
+	
 	public void setIsLeader(boolean isLeader) {
 		this.isLeader = isLeader;
-		if (updateClientsTimer != null) {
-			updateClientsTimer.cancel();
-		}
+		
 		if (isLeader) {
 			System.out.println("server is leader: " + this.port);
-			// stop failure detector because the server becomes leader
 			this.isElectionRunning = false;
-			updateClientsTimer = new Timer();
-			System.out.println("start permanent client update..");
-			TimerTask task = new TimerTask() {
-				@Override
-				public void run() {
-					try {
-						permanentClientUpdate();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-
-				}
-			};
-			updateClientsTimer.schedule(task, 10, 800);
 		}
-	}
-
-	private void permanentClientUpdate() throws IOException {
-		String dataWithSequenceId = this.fifoDeliver.getCurrentDbDataWithUpdatedSequenceId();
-		String dataToSent = this.port + "," + dataWithSequenceId;
-		sender.sendMultiCastMessage(dataToSent, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 	}
 
 	public void stopLeading() {
 		System.out.println("Stop leading");
 		this.isLeader = false;
-		if (this.updateClientsTimer != null) {
-			this.updateClientsTimer.cancel();
-		}
+	}
+	
+	public String getLeadUid() {
+		return leadUid;
+	}
+
+	public void setLeadUid(String leadUid) {
+		this.leadUid = leadUid;
+		// start failure detector once the leader is known
+		isElectionRunning = false;// election completed. a new election can now be trigger.
 	}
 
 	public String getUid() {

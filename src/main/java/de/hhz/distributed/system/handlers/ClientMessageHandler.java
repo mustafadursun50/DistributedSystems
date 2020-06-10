@@ -3,17 +3,18 @@ package de.hhz.distributed.system.handlers;
 import java.io.IOException;
 
 import de.hhz.distributed.system.algo.FifoDeliver;
+import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.server.Sender;
 
-public class MessageHandler implements Runnable {
+public class ClientMessageHandler implements Runnable {
 	private String inputMsg;
 	private String clientIp;
 	private int clientPort;
 	private Sender sender;
 	private FifoDeliver fifoDeliver;
 
-	public MessageHandler(String input, String clientIp, int serverPort) {
+	public ClientMessageHandler(String input, String clientIp, int serverPort) {
 		this.inputMsg = input;
 		this.clientIp = clientIp;
 		this.clientPort = serverPort;
@@ -23,20 +24,27 @@ public class MessageHandler implements Runnable {
 
 	public void run() {		
 		try {
-			if(inputMsg.startsWith("0,0,0,")) {
+			if(inputMsg.startsWith("getHistoryState")) {
 				String missedMsg = fifoDeliver.deliverAskedMessage(inputMsg);
 				if (missedMsg != null && !missedMsg.isEmpty()) {
 					sender.sendTCPMessage(missedMsg, clientIp, clientPort);
 				} else {
 					System.out.println("ERROR: askedMessage not successfully sent");
 				}
-			}else {
-			if (ProductDb.updateProductDb(this.inputMsg)) {
-				this.sendClientMessage("OK", this.clientIp, this.clientPort);
-			} else {
-				this.sendClientMessage("NOK", this.clientIp, this.clientPort);
 			}
-		}
+			else if (inputMsg.startsWith("postOrder")) {
+				if(ProductDb.updateProductDb(this.inputMsg)) {
+					String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
+					this.sendClientUdp(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+					this.sendClientMessage("OK", this.clientIp, this.clientPort);
+				}
+				else {
+					this.sendClientMessage("NOK", this.clientIp, this.clientPort);
+				}
+			}
+			else {
+				System.out.println("Not supportd msg type");
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -50,5 +58,8 @@ public class MessageHandler implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	private void sendClientUdp(String message, String adress, int port) {
+		sender.sendMultiCastMessage(message, adress, port);
 	}
 }
