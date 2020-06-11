@@ -39,9 +39,9 @@ public class ProductDb {
 		try {
 			String products = Files.readAllLines(Paths.get("product.txt")).get(0);
 			String [] splitedDb = products.split(",");
-			int bananaDb = Integer.parseInt(splitedDb[1]);
-			int milkDb = Integer.parseInt(splitedDb[2]);
-			int tomatoDb = Integer.parseInt(splitedDb[3]);
+			int bananaDb = Integer.parseInt(splitedDb[0]);
+			int milkDb = Integer.parseInt(splitedDb[1]);
+			int tomatoDb = Integer.parseInt(splitedDb[2]);
 			
 			String [] splitedReq = dataReq.split(",");
 			int bananaReq = Integer.parseInt(splitedReq[1]);

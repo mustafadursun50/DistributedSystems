@@ -161,17 +161,20 @@ public class Server implements Runnable {
 				String clientIp = mSocket.getInetAddress().getHostAddress();
 				if (input.equals(Constants.PING_LEADER)) {
 					sender.sendTCPMessage(Constants.PING_LEADER, this.mSocket);
+					this.mSocket.close();
 				} else if (input.equals(Constants.PING_REPLICA)) {
 					sender.sendTCPMessage(Constants.PING_REPLICA, this.mSocket);
+					this.mSocket.close();
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					isElectionRunning = true;
 					this.mElector.handleVoting(input);
+					this.mSocket.close();
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg: " + input);
-					new Thread(new ClientMessageHandler(input, clientIp, this.port)).start();
+					new Thread(new ClientMessageHandler(input, clientIp, this.port, this.mSocket)).start();
 				}
-				this.mSocket.close();
+				
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

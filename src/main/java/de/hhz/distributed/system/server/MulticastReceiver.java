@@ -115,7 +115,7 @@ public class MulticastReceiver implements Runnable {
 					InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
 
 			this.mMulticastSocket.send(msgPacket);
-			// System.out.println("send multicast msg from port: " + portAsString);
+			 System.out.println("send multicast msg from port: " );
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
