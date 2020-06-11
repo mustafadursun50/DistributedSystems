@@ -22,11 +22,12 @@ public class MulticastReceiver implements Runnable {
 	private int serverPort;
 	String uid;
 	String neighborUid;
+	Server server;
 
 	// List of host uid with ip and ports
 	Map<String, Properties> knownHosts = new HashMap<String, Properties>();
 
-	public MulticastReceiver(String uid, int port) {
+	public MulticastReceiver(String uid, int port, Server server) {
 		try {
 			group = InetAddress.getByName(Constants.SERVER_MULTICAST_ADDRESS);
 		} catch (UnknownHostException e) {
@@ -34,6 +35,7 @@ public class MulticastReceiver implements Runnable {
 		}
 		this.serverPort = port;
 		this.uid = uid;
+		this.server = server;
 	}
 
 	public Properties getAdressById(String uid) {
@@ -97,6 +99,28 @@ public class MulticastReceiver implements Runnable {
 		}
 	}
 
+	public void sendClientMulticastMessage() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.serverPort);
+		sb.append(",");
+		sb.append("5");
+		sb.append(",");
+		sb.append("10");
+		sb.append(",");
+		sb.append("15");
+		sb.append(",");
+		sb.append("1");
+		try {
+			DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
+					InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
+
+			this.mMulticastSocket.send(msgPacket);
+			// System.out.println("send multicast msg from port: " + portAsString);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
 	public void run() {
 		try {
 			mMulticastSocket = new MulticastSocket(Constants.SERVER_MULTICAST_PORT);
@@ -105,13 +129,16 @@ public class MulticastReceiver implements Runnable {
 			mMulticastSocket.setTimeToLive(1);
 			while (true) {
 				DatagramPacket packet = new DatagramPacket(buf, buf.length);
-				
+
 				mMulticastSocket.receive(packet);
 				String receivedMsg = new String(packet.getData(), 0, packet.getLength());
-				if(receivedMsg.equals(Constants.CLIENT_MULTICAST_MESSAGE)) {
-					//Client sent a multicast message
-					System.out.println("recived from client: "+receivedMsg);
-					return;
+				if (receivedMsg.equals(Constants.CLIENT_MULTICAST_MESSAGE)) {
+					// Client sent a multicast message
+					if (this.server.isLeader()) {
+						this.sendClientMulticastMessage();
+						return;
+
+					}
 				}
 				if (receivedMsg != null && receivedMsg.split(":").length == 2) {
 					String hostUid = receivedMsg.split(":")[0];

@@ -38,7 +38,7 @@ public class Server implements Runnable {
 		sb.append(port);
 		this.uid = sb.toString();
 		this.port = port;
-		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port);
+		this.mMulticastReceiver = new MulticastReceiver(this.uid, this.port, this);
 		this.mElector = new LeadElector(this);
 		this.sender = new Sender();
 		doPing();
