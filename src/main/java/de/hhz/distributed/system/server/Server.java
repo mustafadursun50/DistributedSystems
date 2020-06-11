@@ -99,7 +99,8 @@ public class Server implements Runnable {
 		this.mMulticastReceiver.close();
 	}
 
-	public void sendVotingMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
+	public void sendVotingMessage(final String message, String hostAddress, final int port)
+			throws ClassNotFoundException {
 
 		try {
 			sender.sendTCPMessage(message, hostAddress, port);
@@ -149,6 +150,8 @@ public class Server implements Runnable {
 		if (mMulticastReceiver.getKnownHosts().size() > 0) {
 			this.startVoting();
 
+		} else {
+			this.isLeader = true;
 		}
 
 		while (true) {
@@ -186,14 +189,13 @@ public class Server implements Runnable {
 		}
 	}
 
-
 	public int getPort() {
 		return this.port;
 	}
-	
+
 	public void setIsLeader(boolean isLeader) {
 		this.isLeader = isLeader;
-		
+
 		if (isLeader) {
 			System.out.println("server is leader: " + this.port);
 			this.isElectionRunning = false;
@@ -204,7 +206,7 @@ public class Server implements Runnable {
 		System.out.println("Stop leading");
 		this.isLeader = false;
 	}
-	
+
 	public String getLeadUid() {
 		return leadUid;
 	}
