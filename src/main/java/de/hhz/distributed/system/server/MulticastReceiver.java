@@ -108,6 +108,11 @@ public class MulticastReceiver implements Runnable {
 				
 				mMulticastSocket.receive(packet);
 				String receivedMsg = new String(packet.getData(), 0, packet.getLength());
+				if(receivedMsg.equals(Constants.CLIENT_MULTICAST_MESSAGE)) {
+					//Client sent a multicast message
+					System.out.println("recived from client: "+receivedMsg);
+					return;
+				}
 				if (receivedMsg != null && receivedMsg.split(":").length == 2) {
 					String hostUid = receivedMsg.split(":")[0];
 					String hostPort = receivedMsg.split(":")[1];

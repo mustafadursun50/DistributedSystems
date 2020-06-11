@@ -48,7 +48,7 @@ public class Server implements Runnable {
 	 * Leader send ping to replicas and say's i am here.
 	 */
 	public void doPing() {
-		System.out.println("Start Ping mechanism..");
+		System.out.println("Start Ping mechanism");
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
