@@ -136,11 +136,9 @@ public class MulticastReceiver implements Runnable {
 					// Client sent a multicast message
 					if (this.server.isLeader()) {
 						this.sendClientMulticastMessage();
-						return;
-
 					}
 				}
-				if (receivedMsg != null && receivedMsg.split(":").length == 2) {
+				else if (receivedMsg != null && receivedMsg.split(":").length == 2) {
 					String hostUid = receivedMsg.split(":")[0];
 					String hostPort = receivedMsg.split(":")[1];
 					Properties hostProperties = new Properties();
