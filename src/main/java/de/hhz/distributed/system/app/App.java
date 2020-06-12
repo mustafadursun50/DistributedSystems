@@ -11,7 +11,7 @@ public class App {
 
 		ProductDb.initializeDb();
 		Thread.sleep(1000);
-		int port = Integer.parseInt(args[0]);
+		int port = 800;//Integer.parseInt(args[0]);
 		Server server = new Server(port);
 		new Thread(server).start();
 		

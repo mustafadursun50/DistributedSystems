@@ -28,7 +28,8 @@ public class Sender {
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 		objectOutputStream.writeObject(message);
 		objectOutputStream.flush();
-		objectOutputStream.close();
+		//objectOutputStream.close();
+		//socket.close();
 	}
 	
 	public void sendMultiCastMessage(String message, String adress, final int port) {

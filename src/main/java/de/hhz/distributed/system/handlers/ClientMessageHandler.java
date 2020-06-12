@@ -1,6 +1,7 @@
 package de.hhz.distributed.system.handlers;
 
 import java.io.IOException;
+import java.net.Socket;
 
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.app.Constants;
@@ -13,14 +14,19 @@ public class ClientMessageHandler implements Runnable {
 	private int clientPort;
 	private Sender sender;
 	private FifoDeliver fifoDeliver;
+	private Socket socket;
 
-	public ClientMessageHandler(String input, String clientIp, int serverPort) {
+	public ClientMessageHandler(String input, String clientIp, int serverPort, Socket socket) {
 		this.inputMsg = input;
 		this.clientIp = clientIp;
 		this.clientPort = serverPort;
 		this.sender = new Sender();
 		this.fifoDeliver = new FifoDeliver();
+		this.socket = socket;
+		
 	}
+
+
 
 	public void run() {		
 		try {
@@ -35,16 +41,24 @@ public class ClientMessageHandler implements Runnable {
 			else if (inputMsg.startsWith("requestOrder")) {
 				if(ProductDb.updateProductDb(this.inputMsg)) {
 					String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
-					this.sendClientUdp(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
-					this.sendClientMessage("responseOrder,OK", this.clientIp, this.clientPort);
+					System.out.println("clientIp "+ clientIp);
+					System.out.println("clientPort "+ clientPort);
+					System.out.println("Socket " + this.socket);
+					sender.sendTCPMessage("Hallo Gürkan", this.socket);
+					
+					System.out.println("TCP an den kaufenden Client bescheid geben das kauf geklappt hat");
+					System.out.println("UPD an die Gruppe das Lagerbestand sich geändert hat");
+					//this.sendClientUdp(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+					//this.sendClientMessage("responseOrder,OK", this.clientIp, this.clientPort);
 				}
 				else {
-					this.sendClientMessage("responseOrder,NOK", this.clientIp, this.clientPort);
+					sender.sendTCPMessage("responseOrder,NOK", this.socket);
+					
 				}
 			}
 			else {
 				System.out.println("Not supportd msg type");
-				this.sendClientMessage("NotSupportedMsgType", this.clientIp, this.clientPort);
+				sender.sendTCPMessage("responseOrder,NOK", this.socket);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
