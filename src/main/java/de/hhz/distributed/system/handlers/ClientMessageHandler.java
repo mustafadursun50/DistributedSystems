@@ -30,13 +30,14 @@ public class ClientMessageHandler implements Runnable {
 
 	public void run() {		
 		try {
-			if(inputMsg.startsWith("getHistoryState")) {
+			if(inputMsg.startsWith(Constants.PACKAGE_LOSS)) {
 				String missedMsg = fifoDeliver.deliverAskedMessage(inputMsg);
 				if (missedMsg != null && !missedMsg.isEmpty()) {
 					sender.sendTCPMessage(missedMsg, this.socket);
 				} else {
 					System.out.println("ERROR: askedMessage not successfully sent");
 				}
+				
 			}
 			else if (inputMsg.startsWith("requestOrder")) {
 				if(ProductDb.updateProductDb(this.inputMsg)) {
@@ -56,18 +57,5 @@ public class ClientMessageHandler implements Runnable {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
-	
-	private void sendClientMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException {
-		try {
-			sender.sendTCPMessage(message, hostAddress, port);
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	private void sendClientUdp(String message, String adress, int port) {
-		sender.sendMultiCastMessage(message, adress, port);
 	}
 }

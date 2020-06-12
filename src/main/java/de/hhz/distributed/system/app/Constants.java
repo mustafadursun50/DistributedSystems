@@ -18,4 +18,5 @@ public class Constants {
 	public static final String PRODUCT_DB_NAME = "productDb.txt";
 	public static final String PING_LEADER = "PingReplicaToLeader";
 	public static final String CLIENT_MULTICAST_MESSAGE = "hallo";
+	public static final String PACKAGE_LOSS = "packageLoss";
 }
