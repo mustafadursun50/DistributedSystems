@@ -202,6 +202,7 @@ public class Server implements Runnable {
 		if (isLeader) {
 			System.out.println("server is leader: " + this.port);
 			this.isElectionRunning = false;
+			this.mMulticastReceiver.sendClientMulticastMessage();
 		}
 	}
 
