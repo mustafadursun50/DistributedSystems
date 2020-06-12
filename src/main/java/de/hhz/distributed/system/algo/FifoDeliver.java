@@ -4,10 +4,10 @@ import java.util.HashMap;
 
 public class FifoDeliver {
 
-	private HashMap<Long, String> deliveryQueue = new HashMap<Long, String>();
+	private static HashMap<Long, String> deliveryQueue = new HashMap<Long, String>();
 	private static long sequenceNo;
 	
-	public String assigneSequenceId(String data) {		
+	public static String assigneSequenceId(String data) {		
 		deliveryQueue.put(++sequenceNo, data);
 		String dbWithSeqId =  deliveryQueue.get(sequenceNo)+ "," + sequenceNo;
 		return dbWithSeqId;

@@ -12,8 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
+import de.hhz.distributed.system.db.ProductDb;
 
 public class MulticastReceiver implements Runnable {
 	private MulticastSocket mMulticastSocket;
@@ -102,20 +104,15 @@ public class MulticastReceiver implements Runnable {
 	public void sendClientMulticastMessage() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.serverPort);
+		String dbState = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
 		sb.append(",");
-		sb.append("5");
-		sb.append(",");
-		sb.append("10");
-		sb.append(",");
-		sb.append("15");
-		sb.append(",");
-		sb.append("1");
+		sb.append(dbState);
 		try {
 			DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
 					InetAddress.getByName(Constants.CLIENT_MULTICAST_ADDRESS), Constants.CLIENT_MULTICAST_PORT);
 
 			this.mMulticastSocket.send(msgPacket);
-			 System.out.println("send multicast msg from port: " );
+			System.out.println("send multicast msg from port: ");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -137,8 +134,7 @@ public class MulticastReceiver implements Runnable {
 					if (this.server.isLeader()) {
 						this.sendClientMulticastMessage();
 					}
-				}
-				else if (receivedMsg != null && receivedMsg.split(":").length == 2) {
+				} else if (receivedMsg != null && receivedMsg.split(":").length == 2) {
 					String hostUid = receivedMsg.split(":")[0];
 					String hostPort = receivedMsg.split(":")[1];
 					Properties hostProperties = new Properties();
