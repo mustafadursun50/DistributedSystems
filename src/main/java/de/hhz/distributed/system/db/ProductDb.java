@@ -18,7 +18,7 @@ public class ProductDb {
 			fileDb = new File(Constants.PRODUCT_DB_NAME);
 			if(!fileDb.exists()) {
 				fileDb.createNewFile();
-				String initalDbLoad =  10 +"," + 10 + "," + 10;
+				String initalDbLoad =  100 +"," + 80 + "," + 110;
 				pw = new PrintWriter(fileDb);
 				pw.println(initalDbLoad);
 				pw.close();
@@ -37,7 +37,8 @@ public class ProductDb {
 	public static boolean updateProductDb(String dataReq) {
 		boolean updateSuccessful = false;
 		try {
-			String products = Files.readAllLines(Paths.get("product.txt")).get(0);
+			System.out.println("incoming order request: "+dataReq);
+			String products = Files.readAllLines(Paths.get(Constants.PRODUCT_DB_NAME)).get(0);
 			String [] splitedDb = products.split(",");
 			int bananaDb = Integer.parseInt(splitedDb[0]);
 			int milkDb = Integer.parseInt(splitedDb[1]);

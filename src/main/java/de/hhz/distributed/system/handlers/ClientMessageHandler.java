@@ -33,23 +33,16 @@ public class ClientMessageHandler implements Runnable {
 			if(inputMsg.startsWith("getHistoryState")) {
 				String missedMsg = fifoDeliver.deliverAskedMessage(inputMsg);
 				if (missedMsg != null && !missedMsg.isEmpty()) {
-					sender.sendTCPMessage(missedMsg, clientIp, clientPort);
+					sender.sendTCPMessage(missedMsg, this.socket);
 				} else {
 					System.out.println("ERROR: askedMessage not successfully sent");
 				}
 			}
 			else if (inputMsg.startsWith("requestOrder")) {
 				if(ProductDb.updateProductDb(this.inputMsg)) {
-					String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
-					System.out.println("clientIp "+ clientIp);
-					System.out.println("clientPort "+ clientPort);
-					System.out.println("Socket " + this.socket);
-					sender.sendTCPMessage("Hallo Gürkan", this.socket);
-					
-					System.out.println("TCP an den kaufenden Client bescheid geben das kauf geklappt hat");
-					System.out.println("UPD an die Gruppe das Lagerbestand sich geändert hat");
-					//this.sendClientUdp(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
-					//this.sendClientMessage("responseOrder,OK", this.clientIp, this.clientPort);
+						sender.sendTCPMessage("responseOrder,OK", this.socket);
+						String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
+                this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 				}
 				else {
 					sender.sendTCPMessage("responseOrder,NOK", this.socket);
