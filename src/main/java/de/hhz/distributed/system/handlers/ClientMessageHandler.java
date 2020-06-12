@@ -33,7 +33,7 @@ public class ClientMessageHandler implements Runnable {
 			if(inputMsg.startsWith(Constants.PACKAGE_LOSS)) {
 				String missedMsg = fifoDeliver.deliverAskedMessage(inputMsg);
 				if (missedMsg != null && !missedMsg.isEmpty()) {
-					sender.sendTCPMessage(missedMsg, this.socket);
+					sender.sendTCPMessage(missedMsg, this.socket); 
 				} else {
 					System.out.println("ERROR: askedMessage not successfully sent");
 				}

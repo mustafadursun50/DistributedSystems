@@ -11,9 +11,14 @@ public class App {
 
 		ProductDb.initializeDb();
 		Thread.sleep(1000);
-		int port = 800;//Integer.parseInt(args[0]);
+		int port = -1;
+		port = Integer.parseInt(System.getProperty("port"));
+		if (port == -1) {
+			System.out.println("port is required");
+			return;
+		}
 		Server server = new Server(port);
 		new Thread(server).start();
-		
+
 	}
 }
