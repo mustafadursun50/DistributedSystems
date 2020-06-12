@@ -41,7 +41,7 @@ public class ClientMessageHandler implements Runnable {
 			else if (inputMsg.startsWith("requestOrder")) {
 				if(ProductDb.updateProductDb(this.inputMsg)) {
 						sender.sendTCPMessage("responseOrder,OK", this.socket);
-						String msgToSend = fifoDeliver.assigneSequenceId(this.inputMsg);
+						String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
                 this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 				}
 				else {
