@@ -205,8 +205,6 @@ public class Server implements Runnable {
 			//Send multicast multiple times to ensure that the client received the message
 			this.mMulticastReceiver.sendClientMulticastMessage();
 			this.mMulticastReceiver.sendClientMulticastMessage();
-			this.mMulticastReceiver.sendClientMulticastMessage();
-
 		}
 	}
 
