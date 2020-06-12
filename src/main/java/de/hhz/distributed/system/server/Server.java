@@ -202,7 +202,11 @@ public class Server implements Runnable {
 		if (isLeader) {
 			System.out.println("server is leader: " + this.port);
 			this.isElectionRunning = false;
+			//Send multicast multiple times to ensure that the client received the message
 			this.mMulticastReceiver.sendClientMulticastMessage();
+			this.mMulticastReceiver.sendClientMulticastMessage();
+			this.mMulticastReceiver.sendClientMulticastMessage();
+
 		}
 	}
 
