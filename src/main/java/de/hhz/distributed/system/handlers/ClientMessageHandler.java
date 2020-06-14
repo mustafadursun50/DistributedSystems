@@ -46,7 +46,7 @@ public class ClientMessageHandler implements Runnable {
 
 					StringBuilder sb = new StringBuilder();
 					sb.append(Constants.UPDATE_REPLICA);
-					sb.append(":");
+					sb.append(",");
 					sb.append(ProductDb.getCurrentData());
 					this.updateReplicats(sb.toString());
 

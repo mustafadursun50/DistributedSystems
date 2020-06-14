@@ -180,9 +180,8 @@ public class Server implements Runnable {
 					this.mElector.handleVoting(input);
 					this.mSocket.close();
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
-					String data = input.substring(input.indexOf(":"), input.length());
-					System.out.println("save update "+data);
-					ProductDb.updateProductDb(data);
+					System.out.println("save update "+input);
+					ProductDb.updateProductDb(input);
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg: " + input);
