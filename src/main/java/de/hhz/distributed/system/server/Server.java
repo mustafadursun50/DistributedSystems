@@ -49,7 +49,6 @@ public class Server implements Runnable {
 	 * Leader send ping to replicas and say's i am here.
 	 */
 	public void doPing() {
-		System.out.println("Start Ping mechanism");
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
@@ -61,6 +60,8 @@ public class Server implements Runnable {
 						String answer = sender.sendAndReceiveTCPMessage(Constants.PING_LEADER, host, port);
 						if (answer != null) {
 							pingErrorCounter = 0;
+							System.out.println("ping ok " + port);
+
 						} else {
 							System.out.println("ping nok " + port);
 							if (pingErrorCounter == (Constants.MAX_PING_LIMIT_SEC / Constants.PING_INTERVALL_SEC)) {
@@ -109,7 +110,6 @@ public class Server implements Runnable {
 			// Member could not be reached
 			// Clean list an
 			if (message.startsWith(LeadElector.LCR_PREFIX)) {
-				e.printStackTrace();
 				this.mMulticastReceiver.removeNeighbor();
 				System.out.println(
 						"Server " + hostAddress + ":" + port + " Could not be reached. Remove from known host");
@@ -153,6 +153,16 @@ public class Server implements Runnable {
 
 		} else {
 			this.isLeader = true;
+			try {
+				this.mMulticastReceiver.sendMulticastMessage();
+				Thread.sleep(3000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			if (mMulticastReceiver.getKnownHosts().size() > 0) {
+				this.startVoting();
+
+			}
 		}
 
 		while (true) {

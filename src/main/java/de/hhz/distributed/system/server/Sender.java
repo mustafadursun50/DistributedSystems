@@ -9,8 +9,8 @@ import java.net.MulticastSocket;
 import java.net.Socket;
 
 public class Sender {
-	
-	public void sendTCPMessage(final String message, String hostAddress, final int port) throws ClassNotFoundException, IOException {
+
+	public void sendTCPMessage(final String message, String hostAddress, final int port) throws IOException {
 
 		try {
 			Socket socket = new Socket(hostAddress, port);
@@ -21,31 +21,32 @@ public class Sender {
 			socket.close();
 		} catch (IOException e) {
 			throw e;
+		}
 	}
-}
-	
+
 	public synchronized void sendTCPMessage(final String message, Socket socket) throws IOException {
 		ObjectOutputStream objectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 		objectOutputStream.writeObject(message);
 		objectOutputStream.flush();
-		//objectOutputStream.close();
-		//socket.close();
+		// objectOutputStream.close();
+		// socket.close();
 	}
-	
+
 	public void sendMultiCastMessage(String message, String adress, final int port) {
 		try {
 			MulticastSocket mMulticastSocket = new MulticastSocket(port);
 			StringBuilder sb = new StringBuilder();
 			sb.append(message);
 			DatagramPacket msgPacket = new DatagramPacket(sb.toString().getBytes(), sb.toString().getBytes().length,
-			InetAddress.getByName(adress), port);
+					InetAddress.getByName(adress), port);
 			mMulticastSocket.send(msgPacket);
 			mMulticastSocket.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.err.println(e.getMessage());
+			;
 		}
 	}
-	
+
 	public String sendAndReceiveTCPMessage(String message, String hostAddress, final int port) {
 		String answer = null;
 		try {
@@ -59,6 +60,9 @@ public class Sender {
 			mObjectInputStream.close();
 			socket.close();
 		} catch (Exception e) {
+			System.err.println(e.getMessage());
+			;
+
 		}
 		return answer;
 	}
