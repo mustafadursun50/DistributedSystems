@@ -63,7 +63,7 @@ public class ProductDb {
 				updateSuccessful = true;
 			}
 
-			String updatedDb = bananaDb + "," + milkDb + "," + tomatoReq;
+			String updatedDb = bananaDb + "," + milkDb + "," + tomatoDb;
 			pw = new PrintWriter(fileDb);
 			pw.println(updatedDb);
 		} catch (FileNotFoundException e) {
