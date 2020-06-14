@@ -78,6 +78,30 @@ public class ProductDb {
 		return updateSuccessful;
 	}
 
+	public static boolean updateReplicaProductDb(String dataReq) {
+		boolean updateSuccessful = false;
+		System.out.println("Update database with " + dataReq);
+		try {
+	
+			String[] splitedReq = dataReq.split(",");
+			int bananaReq = Integer.parseInt(splitedReq[1]);
+			int milkReq = Integer.parseInt(splitedReq[2]);
+			int tomatoReq = Integer.parseInt(splitedReq[3]);
+
+			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq;
+			pw = new PrintWriter(fileDb);
+			pw.println(updatedDb);
+		} catch (FileNotFoundException e) {
+			updateSuccessful = false;
+			e.printStackTrace();
+		} catch (IOException e) {
+			updateSuccessful = false;
+			e.printStackTrace();
+		} finally {
+			pw.close();
+		}
+		return updateSuccessful;
+	}
 	public static String getCurrentData() {
 		try {
 			return Files.readAllLines(Paths.get(Constants.PRODUCT_DB_NAME)).get(0);

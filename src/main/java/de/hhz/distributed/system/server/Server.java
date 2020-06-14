@@ -181,7 +181,7 @@ public class Server implements Runnable {
 					this.mSocket.close();
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
 					System.out.println("save update "+input);
-					ProductDb.updateProductDb(input);
+					ProductDb.updateReplicaProductDb(input);
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg: " + input);
