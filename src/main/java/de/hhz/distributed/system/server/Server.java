@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
+import de.hhz.distributed.system.db.ProductDb;
 import de.hhz.distributed.system.handlers.ClientMessageHandler;
 
 public class Server implements Runnable {
@@ -158,7 +159,6 @@ public class Server implements Runnable {
 			try {
 				this.mSocket = this.mServerSocket.accept();
 				String input = this.readMessage();
-				String clientIp = mSocket.getInetAddress().getHostAddress();
 				if (input.equals(Constants.PING_LEADER)) {
 					sender.sendTCPMessage(Constants.PING_LEADER, this.mSocket);
 					this.mSocket.close();
@@ -169,12 +169,15 @@ public class Server implements Runnable {
 					isElectionRunning = true;
 					this.mElector.handleVoting(input);
 					this.mSocket.close();
+				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
+					String data = input.substring(input.indexOf(":"), input.length());
+					ProductDb.updateProductDb(data);
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("handle msg: " + input);
-					new Thread(new ClientMessageHandler(input, clientIp, this.port, this.mSocket)).start();
+					new Thread(new ClientMessageHandler(input, this.mSocket, this)).start();
 				}
-				
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -202,7 +205,7 @@ public class Server implements Runnable {
 		if (isLeader) {
 			System.out.println("server is leader: " + this.port);
 			this.isElectionRunning = false;
-			//Send multicast multiple times to ensure that the client received the message
+			// Send multicast multiple times to ensure that the client received the message
 			this.mMulticastReceiver.sendClientMulticastMessage();
 			this.mMulticastReceiver.sendClientMulticastMessage();
 		}
