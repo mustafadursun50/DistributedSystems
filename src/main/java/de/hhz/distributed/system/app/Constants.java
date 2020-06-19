@@ -21,4 +21,5 @@ public class Constants {
 	public static final String PACKAGE_LOSS = "packageLoss";
 	public static final String UPDATE_REPLICA = "updatereplicats";
 	public static final String RESERVESUCCES = "reserve succesfully";
+	public static final String DISCOUNT = "DISCOUNT_ON_APPLE,50,3";
 }

@@ -18,7 +18,7 @@ public class ClientMessageHandler implements Runnable {
 	private FifoDeliver fifoDeliver;
 	private Socket socket;
 	private Server server;
-	Timer lockProductTimer;
+	Timer mProductTimer;
 	
 	public ClientMessageHandler(String input, Socket socket, Server server) {
 		this.inputMsg = input;
@@ -34,18 +34,15 @@ public class ClientMessageHandler implements Runnable {
 
 			@Override
 			public void run() {
-				System.out.println("startet");
-
 				String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
 				sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 						Constants.CLIENT_MULTICAST_PORT);
-				
 				System.out.println("fertig");
-
+				mProductTimer.cancel();
 			}
 		};
-		lockProductTimer = new Timer();
-		lockProductTimer.schedule(timerTask, 10000);
+		mProductTimer = new Timer();
+		mProductTimer.schedule(timerTask, 10000);
 	}
 	
 	public void run() {
@@ -77,14 +74,14 @@ public class ClientMessageHandler implements Runnable {
 					sender.sendTCPMessage("responseOrder,OK", this.socket);
 					Thread.sleep(100);
 					
-					System.out.println("input: "+ this.inputMsg + " lock " + lockProductTimer);
+					System.out.println("input: "+ this.inputMsg + " lock " + mProductTimer);
 
-					if(this.inputMsg.equals("requestOrder,1,0,0") && lockProductTimer != null) {
-						lockProductTimer.cancel();
-						System.out.println("input: "+ this.inputMsg + " lock " + lockProductTimer);
-
+					if(this.inputMsg.equals("requestOrder,1,0,0") && (mProductTimer != null)) {
+						mProductTimer.cancel();
+						System.out.println("Product timer canceled");
+						sender.sendTCPMessage(Constants.DISCOUNT, this.socket);
+						return;
 					}
-
 					
 					String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
@@ -95,13 +92,6 @@ public class ClientMessageHandler implements Runnable {
 					sb.append(",");
 					sb.append(ProductDb.getCurrentData());
 					this.updateReplicats(sb.toString());
-					
-					
-				
-					
-					
-					
-					
 				} 
 				else {
 					sender.sendTCPMessage("responseOrder,NOK", this.socket);
