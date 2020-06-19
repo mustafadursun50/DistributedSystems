@@ -19,6 +19,7 @@ public class ClientMessageHandler implements Runnable {
 	private Socket socket;
 	private Server server;
 	Timer mProductTimer;
+	private TimerTask timerTask;
 	
 	public ClientMessageHandler(String input, Socket socket, Server server) {
 		this.inputMsg = input;
@@ -30,19 +31,27 @@ public class ClientMessageHandler implements Runnable {
 	}
 
 	private void lockProductTimer() {
-		TimerTask timerTask = new TimerTask() {
+		if(mProductTimer != null) {
+			mProductTimer.cancel();
+			System.out.println("ProductTimer canceld");
+		}
+		
+		timerTask = new TimerTask() {
 
 			@Override
 			public void run() {
 				String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
 				sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 						Constants.CLIENT_MULTICAST_PORT);
-				System.out.println("fertig");
+				System.out.println("Timer fertig: "+ msgToSend);
 				mProductTimer.cancel();
 			}
 		};
 		mProductTimer = new Timer();
 		mProductTimer.schedule(timerTask, 10000);
+		System.out.println("mProductTimer: " + mProductTimer);
+
+
 	}
 	
 	public void run() {
@@ -59,9 +68,11 @@ public class ClientMessageHandler implements Runnable {
 			else if (inputMsg.startsWith("reserve")) {
 				// Multicast an Gruppe mit ( "bananaLock" )
 				System.out.println("IN RESERVE");
-				this.sender.sendMultiCastMessage("lock,1,0,0", Constants.CLIENT_MULTICAST_ADDRESS,
+				this.sender.sendMultiCastMessage(this.server.getPort()+",lockBanane", Constants.CLIENT_MULTICAST_ADDRESS,
 						Constants.CLIENT_MULTICAST_PORT);
 				lockProductTimer();
+				System.out.println("mProductTimerAfter: " + mProductTimer);
+
 				// auf TCP Message antworten mit     reservieren erfolgreich 
 				sender.sendTCPMessage(Constants.RESERVESUCCES, this.socket);
 				
