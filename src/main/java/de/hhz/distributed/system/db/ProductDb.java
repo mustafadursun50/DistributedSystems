@@ -20,7 +20,7 @@ public class ProductDb {
 			fileDb = new File(Constants.PRODUCT_DB_NAME);
 			if (!fileDb.exists()) {
 				fileDb.createNewFile();
-				String initalDbLoad = 100 + "," + 80 + "," + 110;
+				String initalDbLoad = 100 + "," + 80 + "," + 110+","+0;
 				pw = new PrintWriter(fileDb);
 				pw.println(initalDbLoad);
 				pw.close();
