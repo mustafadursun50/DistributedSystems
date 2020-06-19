@@ -89,8 +89,9 @@ public class ProductDb {
 			int bananaReq = Integer.parseInt(splitedReq[1]);
 			int milkReq = Integer.parseInt(splitedReq[2]);
 			int tomatoReq = Integer.parseInt(splitedReq[3]);
+			int seq = Integer.parseInt(splitedReq[4]);
 
-			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq;
+			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq+","+seq;
 			pw = new PrintWriter(fileDb);
 			pw.println(updatedDb);
 		} catch (FileNotFoundException e) {
