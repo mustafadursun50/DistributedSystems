@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.app.Constants;
 
 public class ProductDb {
@@ -64,8 +65,9 @@ public class ProductDb {
 			}
 
 			String updatedDb = bananaDb + "," + milkDb + "," + tomatoDb;
+			String msgToWrite = FifoDeliver.assigneSequenceId(updatedDb);
 			pw = new PrintWriter(fileDb);
-			pw.println(updatedDb);
+			pw.println(msgToWrite);
 		} catch (FileNotFoundException e) {
 			updateSuccessful = false;
 			e.printStackTrace();

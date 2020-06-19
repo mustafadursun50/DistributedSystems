@@ -104,7 +104,7 @@ public class MulticastReceiver implements Runnable {
 	public void sendClientMulticastMessage() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(this.serverPort);
-		String dbState = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
+		String dbState = ProductDb.getCurrentData();
 		sb.append(",");
 		sb.append(dbState);
 		try {

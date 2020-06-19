@@ -40,7 +40,7 @@ public class ClientMessageHandler implements Runnable {
 
 			@Override
 			public void run() {
-				String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
+				String msgToSend = ProductDb.getCurrentData();
 				sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 						Constants.CLIENT_MULTICAST_PORT);
 				System.out.println("Timer fertig: "+ msgToSend);
@@ -94,7 +94,8 @@ public class ClientMessageHandler implements Runnable {
 						return;
 					}
 					
-					String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
+					//String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
+					String msgToSend = ProductDb.getCurrentData();
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 							Constants.CLIENT_MULTICAST_PORT);
 
