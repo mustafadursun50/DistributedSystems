@@ -5,11 +5,16 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.LinkedList;
 import java.util.Properties;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import de.hhz.distributed.system.Utils.MessageQueue;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
@@ -29,9 +34,10 @@ public class Server implements Runnable {
 	int permanentUpdatedInterval;
 	int pingErrorCounter;
 	private Sender sender;
+	private Queue<MessageQueue> messageQueue;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
-
+		messageQueue = new LinkedList<MessageQueue>();
 		this.mServerSocket = new ServerSocket(port);
 		StringBuilder sb = new StringBuilder();
 		sb.append(host.getHostAddress());
@@ -43,6 +49,7 @@ public class Server implements Runnable {
 		this.mElector = new LeadElector(this);
 		this.sender = new Sender();
 		doPing();
+		this.startMessageQueueChecker();
 	}
 
 	/**
@@ -99,6 +106,27 @@ public class Server implements Runnable {
 	public void close() throws IOException {
 		this.mServerSocket.close();
 		this.mMulticastReceiver.close();
+	}
+
+	private void startMessageQueueChecker() {
+		
+		TimerTask task = new TimerTask() {
+			@Override
+			public void run() {
+
+				if (!messageQueue.isEmpty()) {
+					MessageQueue message = messageQueue.peek();
+					messageQueue.remove(message);
+					System.out.println("Proceed message: "+message.getMessage());
+					new Thread(new ClientMessageHandler(message.getMessage(), message.getSocket(), Server.this))
+							.start();
+				} else {
+					System.out.println("Queue is leer");
+				}
+			}
+		};
+		Timer timer = new Timer();
+		timer.schedule(task, 1000);
 	}
 
 	public void sendVotingMessage(final String message, String hostAddress, final int port)
@@ -180,12 +208,12 @@ public class Server implements Runnable {
 					this.mElector.handleVoting(input);
 					this.mSocket.close();
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
-					System.out.println("save update "+input);
+					System.out.println("save update " + input);
 					ProductDb.updateReplicaProductDb(input);
 				} else {
 					System.out.println("client connection accepted");
-					System.out.println("handle msg: " + input);
-					new Thread(new ClientMessageHandler(input, this.mSocket, this)).start();
+					System.out.println("Put msg to queue" + input);
+					this.messageQueue.add(new MessageQueue(this.mSocket, input));
 				}
 
 			} catch (Exception e) {

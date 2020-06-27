@@ -27,7 +27,6 @@ public class ClientMessageHandler implements Runnable {
 		this.fifoDeliver = new FifoDeliver();
 		this.socket = socket;
 		this.server = server;
-
 	}
 
 	private void lockProductTimer() {
