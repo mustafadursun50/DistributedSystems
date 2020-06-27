@@ -89,16 +89,17 @@ public class ClientMessageHandler implements Runnable {
 							reservationMsg = (bananaDb - bananaReq - 3) + "," + (tomatoDb - tomateReq - 3) + ","
 									+ (milkDb - milkReq);
 
-							sender.sendTCPMessage("banana,reservation,OK,tomato," + (bananaReq + 3), this.socket);
+							sender.sendTCPMessage("banana,reservation,OK,"+ (bananaReq + 3)+",tomato,reservation2,OK,3", this.socket);
+
 						} else {
 
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq) + ","
 									+ (milkDb - milkReq);
 
-							sender.sendTCPMessage("banana,reservation, OK", this.socket);
+							sender.sendTCPMessage("banana,reservation,OK", this.socket);
 
 						}
-						this.sender.sendMultiCastMessage(this.server.getPort() + ",lockBanane," + reservationMsg,
+						this.sender.sendMultiCastMessage(reservationMsg,
 								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
 
@@ -109,17 +110,17 @@ public class ClientMessageHandler implements Runnable {
 				} else if (tomateReq > 0) {
 					// Reserver tomato
 					if (tomateReq <= tomatoDb) {
-						if (tomateReq + 2 <= tomatoDb) {
-							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq - 2) + ","
+						if (tomateReq + 1 <= tomatoDb) {
+							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq - 1) + ","
 									+ (milkDb - milkReq);
-							sender.sendTCPMessage("tomato,reservation,OK,banana," + (tomateReq + 2), this.socket);
+							sender.sendTCPMessage("tomato,reservation,OK,"+ (tomateReq + 1)+",banana,reservation2,OK,1", this.socket);
 						} else {
 							reservationMsg = (bananaDb - bananaReq - 1) + "," + (tomatoDb - tomateReq) + ","
 									+ (milkDb - milkReq);
-							sender.sendTCPMessage("tomato,reservation, OK", this.socket);
+							sender.sendTCPMessage("tomato,reservation,OK", this.socket);
 
 						}
-						this.sender.sendMultiCastMessage(this.server.getPort() + ",lockTomate," + reservationMsg,
+						this.sender.sendMultiCastMessage(reservationMsg,
 								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
 
@@ -131,20 +132,21 @@ public class ClientMessageHandler implements Runnable {
 					// Reserve milk
 					if (milkReq <= milkDb) {
 
-						if (milkReq + 1 <= milkDb) {
-							sender.sendTCPMessage("milk,reservation,OK,tomato," + (milkReq + 1), this.socket);
+						if (milkReq + 2 <= milkDb) {
+							sender.sendTCPMessage("milk,reservation,OK,"+ (milkReq + 2)+",tomato,reservation2,OK,2", this.socket);
+
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq) + ","
-									+ (milkDb - milkReq - 1);
+									+ (milkDb - milkReq - 2);
 
 						} else {
-							sender.sendTCPMessage("milk,reservation, OK", this.socket);
+							sender.sendTCPMessage("milk,reservation,OK", this.socket);
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq - 2) + ","
-									+ (milkDb - milkReq - 1);
+									+ (milkDb - milkReq - 2);
 
 						}
 
 					}
-					this.sender.sendMultiCastMessage(this.server.getPort() + ",lockMilk," + reservationMsg,
+					this.sender.sendMultiCastMessage(reservationMsg,
 							Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 					lockProductTimer();
 				} else {
