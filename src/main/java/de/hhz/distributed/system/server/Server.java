@@ -126,7 +126,7 @@ public class Server implements Runnable {
 			}
 		};
 		Timer timer = new Timer();
-		timer.schedule(task, 0, 10000);
+		timer.schedule(task, 0, 1000);
 	}
 
 	public void sendVotingMessage(final String message, String hostAddress, final int port)

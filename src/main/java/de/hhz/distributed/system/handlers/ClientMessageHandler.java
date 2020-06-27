@@ -49,7 +49,7 @@ public class ClientMessageHandler implements Runnable {
 			}
 		};
 		mProductTimer = new Timer();
-		mProductTimer.schedule(timerTask, 10000);
+		mProductTimer.schedule(timerTask, 100);
 		System.out.println("mProductTimer: " + mProductTimer);
 
 	}
@@ -89,35 +89,42 @@ public class ClientMessageHandler implements Runnable {
 						if (bananaReq + 3 <= bananaDb) {
 							sender.sendTCPMessage("banana,reservation,OK,tomato," + (bananaReq + 3), this.socket);
 						} else {
-							sender.sendTCPMessage("banana,reservation, OK", this.socket);
+							sender.sendTCPMessage("banana,reservation,OK", this.socket);
 						}
 					} else {
 						sender.sendTCPMessage("banana,NOK," + bananaDb, this.socket);
 					}
 
-				} else if (tomateReq > 0) {
-					// Reserver tomato
-					if (tomateReq >= tomatoDb) {
-						if (tomateReq + 2 <= tomatoDb) {
-							sender.sendTCPMessage("tomato,reservation,OK,banana," + (tomateReq + 2), this.socket);
-						} else {
-							sender.sendTCPMessage("tomato,reservation, OK", this.socket);
-						}
-					} else {
-						sender.sendTCPMessage("tomato,reservation,NOK," + bananaDb, this.socket);
-					}
-				} else if (milkReq > 0) {
+				} 
+				
+				
+				else if (milkReq > 0) {
 					// Reserve milk
-					if (milkReq >= milkDb) {
-						if (milkReq + 1 <= milkDb) {
-							sender.sendTCPMessage("milk,reservation,OK,tomato," + (milkReq + 1), this.socket);
+					if (milkReq <= milkDb) {
+						if (milkReq + 2 <= milkDb) {
+							sender.sendTCPMessage("milk,reservation,OK,tomato," + (milkReq + 2), this.socket);
 						} else {
-							sender.sendTCPMessage("milk,reservation, OK", this.socket);
+							sender.sendTCPMessage("milk,reservation,OK", this.socket);
 						}
 					} else {
-						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
+						sender.sendTCPMessage("milk,NOK," + milkDb, this.socket);
 					}
 				}
+				
+				
+				else if (tomateReq > 0) {
+					// Reserver tomato
+					if (tomateReq <= tomatoDb) {
+						if (tomateReq + 1 <= tomatoDb) {
+							sender.sendTCPMessage("tomato,reservation,OK,banana," + (tomateReq + 1), this.socket);
+						} else {
+							sender.sendTCPMessage("tomato,reservation,OK", this.socket);
+						}
+					} else {
+						sender.sendTCPMessage("tomato,NOK," + tomatoDb, this.socket);
+					}
+				} 
+				
 			}
 
 			else if (inputMsg.startsWith("requestOrder")) {
