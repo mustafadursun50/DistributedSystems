@@ -87,7 +87,7 @@ public class ClientMessageHandler implements Runnable {
 					// Reserver banana
 					if (bananaDb >= bananaReq) {
 						if (bananaReq + 3 <= bananaDb) {
-							sender.sendTCPMessage("banana,reservation,OK,tomato," + 3, this.socket);
+							sender.sendTCPMessage("banana,reservation,OK,tomato," + (bananaReq + 3), this.socket);
 						} else {
 							sender.sendTCPMessage("banana,reservation, OK", this.socket);
 						}
@@ -98,8 +98,8 @@ public class ClientMessageHandler implements Runnable {
 				} else if (tomateReq > 0) {
 					// Reserver tomato
 					if (tomateReq >= tomatoDb) {
-						if (tomateReq + 3 <= tomatoDb) {
-							sender.sendTCPMessage("tomato,reservation,OK,banana," + 3, this.socket);
+						if (tomateReq + 2 <= tomatoDb) {
+							sender.sendTCPMessage("tomato,reservation,OK,banana," + (tomateReq + 2), this.socket);
 						} else {
 							sender.sendTCPMessage("tomato,reservation, OK", this.socket);
 						}
@@ -109,8 +109,8 @@ public class ClientMessageHandler implements Runnable {
 				} else if (milkReq > 0) {
 					// Reserve milk
 					if (milkReq >= milkDb) {
-						if (milkReq + 2 <= milkDb) {
-							sender.sendTCPMessage("milk,reservation,OK,tomato," + 2, this.socket);
+						if (milkReq + 1 <= milkDb) {
+							sender.sendTCPMessage("milk,reservation,OK,tomato," + (milkReq + 1), this.socket);
 						} else {
 							sender.sendTCPMessage("milk,reservation, OK", this.socket);
 						}

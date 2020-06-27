@@ -63,11 +63,19 @@ public class ProductDb {
 				tomatoDb += -tomatoReq;
 				updateSuccessful = true;
 			}
+			System.out.println("FileDB: "+ fileDb);
 
 			String updatedDb = bananaDb + "," + milkDb + "," + tomatoDb;
+			
+			System.out.println("updatedDb: "+ updatedDb);
+
 			String msgToWrite = FifoDeliver.assigneSequenceId(updatedDb);
+			
+			System.out.println("msgToWrite: "+ msgToWrite);
+
 			pw = new PrintWriter(fileDb);
 			pw.println(msgToWrite);
+			
 		} catch (FileNotFoundException e) {
 			updateSuccessful = false;
 			e.printStackTrace();
@@ -75,6 +83,8 @@ public class ProductDb {
 			updateSuccessful = false;
 			e.printStackTrace();
 		} finally {
+			System.out.println("PW: " + pw);
+
 			pw.close();
 		}
 		return updateSuccessful;

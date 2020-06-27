@@ -10,12 +10,20 @@ public class FifoDeliver {
 	private static long sequenceNo;
 
 	public static String assigneSequenceId(String data) {
+		System.out.println("sequenceNo: " + sequenceNo);
+
 		if (sequenceNo == 0) {
 			String productAsString = ProductDb.getCurrentData();
-			sequenceNo = Long.parseLong(productAsString.split(",")[productAsString.length()-1]);
+			System.out.println("productAsString: " + productAsString + "productDataSPlit" + productAsString.split(","));
+			System.out.println("p: " + productAsString);
+
+			sequenceNo = Long.parseLong(productAsString.split(",")[productAsString.split(",").length -1]);
+		
+
 		}
 		deliveryQueue.put(++sequenceNo, data);
 		String dbWithSeqId = deliveryQueue.get(sequenceNo) + "," + sequenceNo;
+		System.out.println("dbWithSeqId: "+ dbWithSeqId);
 		return dbWithSeqId;
 	}
 
