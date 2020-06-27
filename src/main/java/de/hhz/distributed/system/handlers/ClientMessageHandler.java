@@ -67,9 +67,7 @@ public class ClientMessageHandler implements Runnable {
 			} else if (inputMsg.startsWith("reserve")) {
 				// Multicast an Gruppe mit ( "bananaLock" )
 				System.out.println("IN RESERVE");
-				this.sender.sendMultiCastMessage(this.server.getPort() + ",lockBanane",
-						Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
-				lockProductTimer();
+				
 				System.out.println("mProductTimerAfter: " + mProductTimer);
 
 				String[] order = inputMsg.split(",");
@@ -82,15 +80,23 @@ public class ClientMessageHandler implements Runnable {
 				int bananaDb = Integer.parseInt(splitedDb[0]);
 				int milkDb = Integer.parseInt(splitedDb[1]);
 				int tomatoDb = Integer.parseInt(splitedDb[2]);
-
+                 String reservationMsg=(bananaDb-bananaReq)+","+(tomatoDb-tomateReq)+","+(milkDb-milkReq);
 				if (bananaReq > 0) {
 					// Reserver banana
 					if (bananaDb >= bananaReq) {
-						if (bananaReq + 3 <= bananaDb) {
+							if (bananaReq + 3 <= bananaDb) {
+				                 reservationMsg=(bananaDb-bananaReq-3)+","+(tomatoDb-tomateReq-3)+","+(milkDb-milkReq);
+
 							sender.sendTCPMessage("banana,reservation,OK,tomato," + (bananaReq + 3), this.socket);
 						} else {
+			                 reservationMsg=(bananaDb-bananaReq)+","+(tomatoDb-tomateReq)+","+(milkDb-milkReq);
+
 							sender.sendTCPMessage("banana,reservation, OK", this.socket);
 						}
+							this.sender.sendMultiCastMessage(this.server.getPort() + ",lockBanane,"+reservationMsg,
+									Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+							lockProductTimer();
+						
 					} else {
 						sender.sendTCPMessage("banana,NOK," + bananaDb, this.socket);
 					}
@@ -98,22 +104,35 @@ public class ClientMessageHandler implements Runnable {
 				} else if (tomateReq > 0) {
 					// Reserver tomato
 					if (tomateReq >= tomatoDb) {
-						if (tomateReq + 2 <= tomatoDb) {
+							if (tomateReq + 2 <= tomatoDb) {
+				                 reservationMsg=(bananaDb-bananaReq)+","+(tomatoDb-tomateReq-2)+","+(milkDb-milkReq);
 							sender.sendTCPMessage("tomato,reservation,OK,banana," + (tomateReq + 2), this.socket);
 						} else {
+			                 reservationMsg=(bananaDb-bananaReq-1)+","+(tomatoDb-tomateReq)+","+(milkDb-milkReq);
 							sender.sendTCPMessage("tomato,reservation, OK", this.socket);
 						}
+							this.sender.sendMultiCastMessage(this.server.getPort() + ",lockTomate,"+reservationMsg,
+									Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+							lockProductTimer();
+						
 					} else {
 						sender.sendTCPMessage("tomato,reservation,NOK," + bananaDb, this.socket);
 					}
 				} else if (milkReq > 0) {
 					// Reserve milk
 					if (milkReq >= milkDb) {
+						
 						if (milkReq + 1 <= milkDb) {
 							sender.sendTCPMessage("milk,reservation,OK,tomato," + (milkReq + 1), this.socket);
+			                 reservationMsg=(bananaDb-bananaReq)+","+(tomatoDb-tomateReq)+","+(milkDb-milkReq-1);
+
 						} else {
 							sender.sendTCPMessage("milk,reservation, OK", this.socket);
+			                 reservationMsg=(bananaDb-bananaReq)+","+(tomatoDb-tomateReq-2)+","+(milkDb-milkReq-1);
 						}
+						this.sender.sendMultiCastMessage(this.server.getPort() + ",lockMilk,"+reservationMsg,
+								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+						lockProductTimer();
 					} else {
 						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
 					}
@@ -127,14 +146,13 @@ public class ClientMessageHandler implements Runnable {
 
 					System.out.println("input: " + this.inputMsg + " lock " + mProductTimer);
 
-					if (this.inputMsg.equals("requestOrder,1,0,0") && (mProductTimer != null)) {
+					if ((mProductTimer != null)) {
 						mProductTimer.cancel();
 						System.out.println("Product timer canceled");
 						sender.sendTCPMessage(Constants.DISCOUNT, this.socket);
 						return;
 					}
 
-					// String msgToSend = FifoDeliver.assigneSequenceId(ProductDb.getCurrentData());
 					String msgToSend = ProductDb.getCurrentData();
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 							Constants.CLIENT_MULTICAST_PORT);
