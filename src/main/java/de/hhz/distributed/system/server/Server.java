@@ -116,7 +116,6 @@ public class Server implements Runnable {
 		TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
-
 				if (!messageQueue.isEmpty()) {
 					MessageQueue message = messageQueue.peek();
 					messageQueue.remove(message);
@@ -124,7 +123,7 @@ public class Server implements Runnable {
 					new Thread(new ClientMessageHandler(message.getMessage(), message.getSocket(), Server.this))
 							.start();
 				} else {
-					System.out.println("Queue is leer");
+					//System.out.println("Queue is empty");
 				}
 			}
 		};
