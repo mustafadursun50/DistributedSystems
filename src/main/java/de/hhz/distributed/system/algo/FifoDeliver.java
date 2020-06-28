@@ -18,8 +18,6 @@ public class FifoDeliver {
 			System.out.println("p: " + productAsString);
 
 			sequenceNo = Long.parseLong(productAsString.split(",")[productAsString.split(",").length -1]);
-		
-
 		}
 		deliveryQueue.put(++sequenceNo, data);
 		String dbWithSeqId = deliveryQueue.get(sequenceNo) + "," + sequenceNo;

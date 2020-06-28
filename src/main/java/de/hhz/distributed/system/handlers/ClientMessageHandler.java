@@ -94,6 +94,7 @@ public class ClientMessageHandler implements Runnable {
 				int bananaDb = Integer.parseInt(splitedDb[0]);
 				int milkDb = Integer.parseInt(splitedDb[1]);
 				int tomatoDb = Integer.parseInt(splitedDb[2]);
+                String actualData=bananaDb+","+milkDb+","+tomatoDb;
 				String reservationMsg = (bananaDb - bananaReq) + "," + (milkDb - milkReq) + ","
 						+ (tomatoDb - tomateReq);
 				if (bananaReq > 0) {
@@ -111,7 +112,6 @@ public class ClientMessageHandler implements Runnable {
 
 							sender.sendTCPMessage("banana,reservation,OK," + quantity + ",tomato,reservation2,OK,3",
 									this.socket);
-
 						} else {
 
 							reservationMsg = (bananaDb - bananaReq) + "," + (milkDb - milkReq) + ","
@@ -121,8 +121,12 @@ public class ClientMessageHandler implements Runnable {
 
 						}
 						System.out.println("KOMMT REIN- " + reservationMsg);
-						this.sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(reservationMsg), Constants.CLIENT_MULTICAST_ADDRESS,
+						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
+						this.updateSequenceNumber(reservationMsg,actualData);
+
 						lockProductTimer();
 
 					} else {
@@ -148,8 +152,10 @@ public class ClientMessageHandler implements Runnable {
 							sender.sendTCPMessage("tomato,reservation,OK", this.socket);
 
 						}
-						this.sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(reservationMsg), Constants.CLIENT_MULTICAST_ADDRESS,
+						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
+						this.updateSequenceNumber(reservationMsg,actualData);
 						lockProductTimer();
 
 					} else {
@@ -174,8 +180,11 @@ public class ClientMessageHandler implements Runnable {
 									+ (tomatoDb - tomateReq - 2);
 
 						}
-						this.sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(reservationMsg), Constants.CLIENT_MULTICAST_ADDRESS,
+						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
+						this.updateSequenceNumber(reservationMsg,actualData);
+
 						lockProductTimer();
 					} else {
 						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
@@ -286,6 +295,10 @@ public class ClientMessageHandler implements Runnable {
 		}
 	}
 
+	private void updateSequenceNumber(String reservationMsg,String data) {
+		String seq = reservationMsg.split(",")[reservationMsg.split(",").length-1];
+		ProductDb.updateReplicaProductDb(data+","+seq);
+	}
 	private void updateReplicats(String message) throws ClassNotFoundException, IOException {
 		for (Properties p : this.server.getMulticastReceiver().getKnownHosts().values()) {
 			String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
