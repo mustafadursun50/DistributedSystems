@@ -104,7 +104,7 @@ public class ClientMessageHandler implements Runnable {
 						lockProductTimer();
 
 					} else {
-						sender.sendTCPMessage("banana,NOK," + bananaDb, this.socket);
+						sender.sendTCPMessage("banana,reservation,NOK," + bananaDb, this.socket);
 					}
 
 				} else if (tomateReq > 0) {
@@ -125,7 +125,7 @@ public class ClientMessageHandler implements Runnable {
 						lockProductTimer();
 
 					} else {
-						sender.sendTCPMessage("milk,NOK," + milkDb, this.socket);
+						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
 					}
 
 				} else if (milkReq > 0) {
@@ -150,7 +150,7 @@ public class ClientMessageHandler implements Runnable {
 							Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 					lockProductTimer();
 				} else {
-					sender.sendTCPMessage("tomato,NOK," + tomatoDb, this.socket);
+					sender.sendTCPMessage("tomato,reservation,NOK," + tomatoDb, this.socket);
 				}
 			}
 
