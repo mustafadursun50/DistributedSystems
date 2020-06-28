@@ -124,8 +124,9 @@ public class ClientMessageHandler implements Runnable {
 								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
 
-					} else {
-						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
+					} 
+					else {
+						sender.sendTCPMessage("tomato,reservation,NOK," + tomatoDb, this.socket);
 					}
 
 				} else if (milkReq > 0) {
@@ -144,14 +145,16 @@ public class ClientMessageHandler implements Runnable {
 									+ (milkDb - milkReq - 2);
 
 						}
-
+						this.sender.sendMultiCastMessage(reservationMsg,
+								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+						lockProductTimer();
 					}
-					this.sender.sendMultiCastMessage(reservationMsg,
-							Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
-					lockProductTimer();
-				} else {
-					sender.sendTCPMessage("tomato,reservation,NOK," + tomatoDb, this.socket);
-				}
+					else {
+						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
+					}
+					
+				} 
+				
 			}
 
 			else if (inputMsg.startsWith("requestOrder")) {
