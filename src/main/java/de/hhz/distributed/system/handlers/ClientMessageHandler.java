@@ -170,37 +170,54 @@ public class ClientMessageHandler implements Runnable {
 			}
 
 			else if (inputMsg.startsWith("requestOrder")) {
-
+				String answer = null;
+				String[] splitedReq = inputMsg.split(",");
+				int bananaReq = Integer.parseInt(splitedReq[1]);
+				int milkReq = Integer.parseInt(splitedReq[2]);
+				int tomatoReq = Integer.parseInt(splitedReq[3]);
+				if (bananaReq > 0) {
+					answer = "responseOrder,OK,banana," + bananaReq;
+				} else if (milkReq > 0) {
+					answer = "responseOrder,OK,milk," + milkReq;
+				} else if (tomatoReq > 0) {
+					answer = "responseOrder,OK,tomato," + tomatoReq;
+				}
 				if (this.server.quotationList.containsKey(this.socket.getLocalAddress().getHostAddress())) {
 					String quotationAsString = this.server.quotationList
 							.get(this.socket.getLocalAddress().getHostAddress());
 					String gift = quotationAsString.split(":")[0];
 					String toBuy = quotationAsString.split(":")[1];
 
-					String[] splitedReq = inputMsg.split(",");
-					int bananaReq = Integer.parseInt(splitedReq[1]);
-					int milkReq = Integer.parseInt(splitedReq[2]);
-					int tomatoReq = Integer.parseInt(splitedReq[3]);
 					// "2,t:"+quantity+",m"
 					if (toBuy.split(",")[1].equals("b") && bananaReq >= Integer.parseInt(toBuy.split(",")[0])) {
 						if (gift.split(",")[1].equals("t")) {
 							tomatoReq = tomatoReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,banana," + bananaReq + ",gift,tomato," + gift.split(",")[0];
 						} else if (gift.split(",")[1].equals("m")) {
 							milkReq = milkReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,banana," + bananaReq + ",gift,milk," + gift.split(",")[0];
 						}
 					} else if (toBuy.split(",")[1].equals("m") && milkReq >= Integer.parseInt(toBuy.split(",")[0])) {
 						if (gift.split(",")[1].equals("t")) {
 							tomatoReq = tomatoReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,milk," + milkReq + ",gift,tomato," + gift.split(",")[0];
+
 						} else if (gift.split(",")[1].equals("b")) {
 							bananaReq = bananaReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,milk," + milkReq + ",gift,tomato," + gift.split(",")[0];
+
 						}
 					}
 
 					else if (toBuy.split(",")[1].equals("t") && tomatoReq >= Integer.parseInt(toBuy.split(",")[0])) {
 						if (gift.split(",")[1].equals("b")) {
 							bananaReq = bananaReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,tomato," + tomatoReq + ",gift,banana," + gift.split(",")[0];
+
 						} else if (gift.split(",")[1].equals("m")) {
 							milkReq = milkReq + Integer.parseInt(gift.split(",")[0]);
+							answer = "responseOrder,OK,tomato," + tomatoReq + ",gift,milk," + gift.split(",")[0];
+
 						}
 					}
 
@@ -209,7 +226,7 @@ public class ClientMessageHandler implements Runnable {
 				}
 
 				if (ProductDb.updateProductDb(this.inputMsg)) {
-					sender.sendTCPMessage("responseOrder,OK", this.socket);
+					sender.sendTCPMessage(answer, this.socket);
 					Thread.sleep(100);
 
 					System.out.println("input: " + this.inputMsg + " lock " + mProductTimer);
