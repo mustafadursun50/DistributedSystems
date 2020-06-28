@@ -5,7 +5,9 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Queue;
 import java.util.Timer;
@@ -35,6 +37,7 @@ public class Server implements Runnable {
 	int pingErrorCounter;
 	private Sender sender;
 	private Queue<MessageQueue> messageQueue;
+	public Map<String,String>quotationList= new HashMap<String, String>();
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 		messageQueue = new LinkedList<MessageQueue>();

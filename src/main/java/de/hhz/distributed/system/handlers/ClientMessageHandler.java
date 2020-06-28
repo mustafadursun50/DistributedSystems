@@ -46,6 +46,9 @@ public class ClientMessageHandler implements Runnable {
 						Constants.CLIENT_MULTICAST_PORT);
 				System.out.println("Timer fertig: " + msgToSend);
 				mProductTimer.cancel();
+				if (server.quotationList.containsKey(socket.getLocalAddress().getHostAddress())) {
+					server.quotationList.remove(socket.getLocalAddress().getHostAddress());
+				}
 			}
 		};
 		mProductTimer = new Timer();
@@ -88,8 +91,11 @@ public class ClientMessageHandler implements Runnable {
 						if (bananaReq + 3 <= bananaDb) {
 							reservationMsg = (bananaDb - bananaReq - 3) + "," + (tomatoDb - tomateReq - 3) + ","
 									+ (milkDb - milkReq);
-
-							sender.sendTCPMessage("banana,reservation,OK,"+ (bananaReq + 3)+",tomato,reservation2,OK,3", this.socket);
+							int quantity = bananaReq + 3;
+							sender.sendTCPMessage("banana,reservation,OK," + quantity + ",tomato,reservation2,OK,3",
+									this.socket);
+							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
+									"3,t:" + quantity + ",b");
 
 						} else {
 
@@ -99,8 +105,8 @@ public class ClientMessageHandler implements Runnable {
 							sender.sendTCPMessage("banana,reservation,OK", this.socket);
 
 						}
-						this.sender.sendMultiCastMessage(reservationMsg,
-								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
+								Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
 
 					} else {
@@ -113,51 +119,95 @@ public class ClientMessageHandler implements Runnable {
 						if (tomateReq + 1 <= tomatoDb) {
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq - 1) + ","
 									+ (milkDb - milkReq);
-							sender.sendTCPMessage("tomato,reservation,OK,"+ (tomateReq + 1)+",banana,reservation2,OK,1", this.socket);
+							int quantity = tomateReq + 1;
+							sender.sendTCPMessage(
+									"tomato,reservation,OK," + (tomateReq + 1) + ",banana,reservation2,OK,1",
+									this.socket);
+							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
+									"1,b:" + quantity + ",t");
+
 						} else {
 							reservationMsg = (bananaDb - bananaReq - 1) + "," + (tomatoDb - tomateReq) + ","
 									+ (milkDb - milkReq);
 							sender.sendTCPMessage("tomato,reservation,OK", this.socket);
 
 						}
-						this.sender.sendMultiCastMessage(reservationMsg,
-								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
+								Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
 
-					} 
-					else {
+					} else {
 						sender.sendTCPMessage("tomato,reservation,NOK," + tomatoDb, this.socket);
 					}
 
 				} else if (milkReq > 0) {
 					// Reserve milk
 					if (milkReq <= milkDb) {
-
 						if (milkReq + 2 <= milkDb) {
-							sender.sendTCPMessage("milk,reservation,OK,"+ (milkReq + 2)+",tomato,reservation2,OK,2", this.socket);
+							int quantity = milkReq + 2;
 
+							sender.sendTCPMessage("milk,reservation,OK," + (milkReq + 2) + ",tomato,reservation2,OK,2",
+									this.socket);
+							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
+									"2,t:" + quantity + ",m");
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq) + ","
 									+ (milkDb - milkReq - 2);
-
 						} else {
 							sender.sendTCPMessage("milk,reservation,OK", this.socket);
 							reservationMsg = (bananaDb - bananaReq) + "," + (tomatoDb - tomateReq - 2) + ","
 									+ (milkDb - milkReq - 2);
 
 						}
-						this.sender.sendMultiCastMessage(reservationMsg,
-								Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
+								Constants.CLIENT_MULTICAST_PORT);
 						lockProductTimer();
-					}
-					else {
+					} else {
 						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
 					}
-					
-				} 
-				
+
+				}
+
 			}
 
 			else if (inputMsg.startsWith("requestOrder")) {
+
+				if (this.server.quotationList.containsKey(this.socket.getLocalAddress().getHostAddress())) {
+					String quotationAsString = this.server.quotationList
+							.get(this.socket.getLocalAddress().getHostAddress());
+					String gift = quotationAsString.split(":")[0];
+					String toBuy = quotationAsString.split(":")[1];
+
+					String[] splitedReq = inputMsg.split(",");
+					int bananaReq = Integer.parseInt(splitedReq[1]);
+					int milkReq = Integer.parseInt(splitedReq[2]);
+					int tomatoReq = Integer.parseInt(splitedReq[3]);
+					// "2,t:"+quantity+",m"
+					if (toBuy.split(",")[1].equals("b") && bananaReq >= Integer.parseInt(toBuy.split(",")[0])) {
+						if (gift.split(",")[1].equals("t")) {
+							tomatoReq = tomatoReq + Integer.parseInt(gift.split(",")[0]);
+						} else if (gift.split(",")[1].equals("m")) {
+							milkReq = milkReq + Integer.parseInt(gift.split(",")[0]);
+						}
+					} else if (toBuy.split(",")[1].equals("m") && milkReq >= Integer.parseInt(toBuy.split(",")[0])) {
+						if (gift.split(",")[1].equals("t")) {
+							tomatoReq = tomatoReq + Integer.parseInt(gift.split(",")[0]);
+						} else if (gift.split(",")[1].equals("b")) {
+							bananaReq = bananaReq + Integer.parseInt(gift.split(",")[0]);
+						}
+					}
+
+					else if (toBuy.split(",")[1].equals("t") && tomatoReq >= Integer.parseInt(toBuy.split(",")[0])) {
+						if (gift.split(",")[1].equals("b")) {
+							bananaReq = bananaReq + Integer.parseInt(gift.split(",")[0]);
+						} else if (gift.split(",")[1].equals("m")) {
+							milkReq = milkReq + Integer.parseInt(gift.split(",")[0]);
+						}
+					}
+
+					this.inputMsg = "requestOrder," + bananaReq + "," + tomatoReq + "," + milkReq;
+					server.quotationList.remove(socket.getLocalAddress().getHostAddress());
+				}
+
 				if (ProductDb.updateProductDb(this.inputMsg)) {
 					sender.sendTCPMessage("responseOrder,OK", this.socket);
 					Thread.sleep(100);
