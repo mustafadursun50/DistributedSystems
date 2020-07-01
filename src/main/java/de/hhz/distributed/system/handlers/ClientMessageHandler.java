@@ -125,6 +125,9 @@ public class ClientMessageHandler implements Runnable {
 
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
+						System.out.println("+++++reservationMsg: " + reservationMsg);
+						System.out.println("+++++actualData: " + actualData);
+
 						this.updateSequenceNumber(reservationMsg,actualData);
 
 						lockProductTimer();
@@ -297,6 +300,9 @@ public class ClientMessageHandler implements Runnable {
 
 	private void updateSequenceNumber(String reservationMsg,String data) {
 		String seq = reservationMsg.split(",")[reservationMsg.split(",").length-1];
+		System.out.println("+++++Data: " + data);
+		System.out.println("+++++SEQ: " + seq);
+
 		ProductDb.updateReplicaProductDb(data+","+seq);
 	}
 	private void updateReplicats(String message) throws ClassNotFoundException, IOException {

@@ -94,14 +94,20 @@ public class ProductDb {
 		boolean updateSuccessful = false;
 		System.out.println("Update database with " + dataReq);
 		try {
-	
+
 			String[] splitedReq = dataReq.split(",");
+			System.out.println("##### updateDB: start " +  dataReq);
+
 			int bananaReq = Integer.parseInt(splitedReq[1]);
 			int milkReq = Integer.parseInt(splitedReq[2]);
 			int tomatoReq = Integer.parseInt(splitedReq[3]);
 			int seq = Integer.parseInt(splitedReq[4]);
 
+			System.out.println("##### updateDB: start ");
+
+			
 			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq+","+seq;
+			System.out.println("##### updateDB: "+ updatedDb);
 			pw = new PrintWriter(fileDb);
 			pw.println(updatedDb);
 		} catch (FileNotFoundException e) {
