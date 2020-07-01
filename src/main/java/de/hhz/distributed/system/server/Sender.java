@@ -14,6 +14,7 @@ public class Sender {
 
 		try {
 			Socket socket = new Socket(hostAddress, port);
+			socket.setSoTimeout(10);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 			mObjectOutputStream.writeObject(message);
 			mObjectOutputStream.flush();
@@ -51,6 +52,7 @@ public class Sender {
 		String answer = null;
 		try {
 			Socket socket = new Socket(hostAddress, port);
+			socket.setSoTimeout(10);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 			mObjectOutputStream.writeObject(message);
 			ObjectInputStream mObjectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -61,7 +63,6 @@ public class Sender {
 			socket.close();
 		} catch (Exception e) {
 			System.err.println(e.getMessage());
-			;
 
 		}
 		return answer;
