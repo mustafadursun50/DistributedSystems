@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.MulticastSocket;
 import java.net.Socket;
 
@@ -51,8 +52,12 @@ public class Sender {
 	public String sendAndReceiveTCPMessage(String message, String hostAddress, final int port) {
 		String answer = null;
 		try {
-			Socket socket = new Socket(hostAddress, port);
-			socket.setSoTimeout(10);
+			
+			Socket socket = new Socket();
+			socket.connect(new InetSocketAddress(hostAddress, port), 1000);
+			
+			//Socket socket = new Socket(hostAddress, port);
+			//socket.setSoTimeout(5);
 			ObjectOutputStream mObjectOutputStream = new ObjectOutputStream(socket.getOutputStream());
 			mObjectOutputStream.writeObject(message);
 			ObjectInputStream mObjectInputStream = new ObjectInputStream(socket.getInputStream());
@@ -62,8 +67,7 @@ public class Sender {
 			mObjectInputStream.close();
 			socket.close();
 		} catch (Exception e) {
-			System.err.println(e.getMessage());
-
+			//e.printStackTrace();
 		}
 		return answer;
 	}

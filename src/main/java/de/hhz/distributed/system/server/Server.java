@@ -38,7 +38,7 @@ public class Server implements Runnable {
 	private Sender sender;
 	private Queue<MessageQueue> messageQueue;
 	public Map<String,String>quotationList= new HashMap<String, String>();
-
+	
 	public Server(final int port) throws IOException, ClassNotFoundException {
 		messageQueue = new LinkedList<MessageQueue>();
 		this.mServerSocket = new ServerSocket(port);
@@ -74,10 +74,18 @@ public class Server implements Runnable {
 
 						} else {
 							System.out.println("ping nok " + port);
-							if (pingErrorCounter == (Constants.MAX_PING_LIMIT_SEC / Constants.PING_INTERVALL_SEC)) {
+
+
+							if (pingErrorCounter == 3) { // (Constants.MAX_PING_LIMIT_SEC / Constants.PING_INTERVALL_SEC)) {				
+								System.out.println(mMulticastReceiver.getKnownHosts().toString());
+
+								mMulticastReceiver.getKnownHosts().remove(leadUid.toString());
+								leadUid = null;
 								startVoting();
+								pingErrorCounter = 0;
 							}
 							pingErrorCounter++;
+
 						}
 					}
 					// ping replicates
@@ -225,10 +233,15 @@ public class Server implements Runnable {
 	}
 
 	public void startVoting() {
+		System.out.println("Gürkan");
 		if (!this.isElectionRunning) {
+			System.out.println("Arnaud");
+
 			try {
 				this.isElectionRunning = true;
 				mElector.initiateVoting();
+				System.out.println("Mustafa");
+
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
