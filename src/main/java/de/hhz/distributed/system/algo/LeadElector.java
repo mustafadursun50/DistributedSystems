@@ -61,6 +61,7 @@ public class LeadElector {
 	 */
 	public void handleVoting(String input) throws NumberFormatException, ClassNotFoundException, IOException {
 
+	
 		String recvUid = null;
 		StringBuilder sb = new StringBuilder();
 		boolean isCoorinationMsg = false;

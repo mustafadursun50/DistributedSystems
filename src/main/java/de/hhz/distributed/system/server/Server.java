@@ -215,6 +215,9 @@ public class Server implements Runnable {
 					this.mSocket.close();
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					isElectionRunning = true;
+					if(this.isLeader) {
+						this.updateReplicats(ProductDb.getCurrentData());
+					}
 					this.mElector.handleVoting(input);
 					this.mSocket.close();
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
@@ -233,15 +236,10 @@ public class Server implements Runnable {
 	}
 
 	public void startVoting() {
-		System.out.println("Gürkan");
 		if (!this.isElectionRunning) {
-			System.out.println("Arnaud");
-
 			try {
 				this.isElectionRunning = true;
 				mElector.initiateVoting();
-				System.out.println("Mustafa");
-
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -267,6 +265,13 @@ public class Server implements Runnable {
 	public void stopLeading() {
 		System.out.println("Stop leading");
 		this.isLeader = false;
+	}
+	private void updateReplicats(String message) throws ClassNotFoundException, IOException {
+		for (Properties p : this.mMulticastReceiver.getKnownHosts().values()) {
+			String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+			int port = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+			this.sender.sendTCPMessage(message, host, port);
+		}
 	}
 
 	public String getLeadUid() {
