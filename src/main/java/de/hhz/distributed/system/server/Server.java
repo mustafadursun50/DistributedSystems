@@ -37,8 +37,8 @@ public class Server implements Runnable {
 	int pingErrorCounter;
 	private Sender sender;
 	private Queue<MessageQueue> messageQueue;
-	public Map<String,String>quotationList= new HashMap<String, String>();
-	
+	public Map<String, String> quotationList = new HashMap<String, String>();
+
 	public Server(final int port) throws IOException, ClassNotFoundException {
 		messageQueue = new LinkedList<MessageQueue>();
 		this.mServerSocket = new ServerSocket(port);
@@ -75,8 +75,8 @@ public class Server implements Runnable {
 						} else {
 							System.out.println("ping nok " + port);
 
-
-							if (pingErrorCounter == 3) { // (Constants.MAX_PING_LIMIT_SEC / Constants.PING_INTERVALL_SEC)) {				
+							if (pingErrorCounter == 3) { // (Constants.MAX_PING_LIMIT_SEC /
+															// Constants.PING_INTERVALL_SEC)) {
 								System.out.println(mMulticastReceiver.getKnownHosts().toString());
 
 								mMulticastReceiver.getKnownHosts().remove(leadUid.toString());
@@ -120,18 +120,18 @@ public class Server implements Runnable {
 	}
 
 	private void startMessageQueueChecker() {
-		
+
 		TimerTask task = new TimerTask() {
 			@Override
 			public void run() {
 				if (!messageQueue.isEmpty()) {
 					MessageQueue message = messageQueue.peek();
 					messageQueue.remove(message);
-					System.out.println("Proceed message: "+message.getMessage());
+					System.out.println("Proceed message: " + message.getMessage());
 					new Thread(new ClientMessageHandler(message.getMessage(), message.getSocket(), Server.this))
 							.start();
 				} else {
-					//System.out.println("Queue is empty");
+					// System.out.println("Queue is empty");
 				}
 			}
 		};
@@ -215,8 +215,9 @@ public class Server implements Runnable {
 					this.mSocket.close();
 				} else if (input.startsWith(LeadElector.LCR_PREFIX)) {
 					isElectionRunning = true;
-					if(this.isLeader) {
-						this.updateReplicats(ProductDb.getCurrentData());
+					if (this.isLeader) {
+						String msg = Constants.UPDATE_REPLICA + "," + ProductDb.getCurrentData();
+						this.updateReplicats(msg);
 					}
 					this.mElector.handleVoting(input);
 					this.mSocket.close();
@@ -266,6 +267,7 @@ public class Server implements Runnable {
 		System.out.println("Stop leading");
 		this.isLeader = false;
 	}
+
 	private void updateReplicats(String message) throws ClassNotFoundException, IOException {
 		for (Properties p : this.mMulticastReceiver.getKnownHosts().values()) {
 			String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
