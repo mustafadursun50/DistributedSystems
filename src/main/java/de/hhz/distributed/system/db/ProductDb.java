@@ -90,9 +90,9 @@ public class ProductDb {
 		return updateSuccessful;
 	}
 
-	public static boolean updateReplicaProductDb(String dataReq) {
+	public static boolean overrideProductDb(String dataReq) {
 		boolean updateSuccessful = false;
-		System.out.println("Update database with " + dataReq);
+		System.out.println("overrideProductDb(): " + dataReq);
 		try {
 
 			String[] splitedReq = dataReq.split(",");
@@ -102,9 +102,6 @@ public class ProductDb {
 			int milkReq = Integer.parseInt(splitedReq[2]);
 			int tomatoReq = Integer.parseInt(splitedReq[3]);
 			int seq = Integer.parseInt(splitedReq[4]);
-
-			System.out.println("##### updateDB: start ");
-
 			
 			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq+","+seq;
 			System.out.println("##### updateDB: "+ updatedDb);

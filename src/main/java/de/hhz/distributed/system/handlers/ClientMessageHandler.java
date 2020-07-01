@@ -42,19 +42,19 @@ public class ClientMessageHandler implements Runnable {
 			@Override
 			public void run() {
 				String msgToSend = ProductDb.getCurrentData();
-				
-                String[] parts = msgToSend.split(",");
-				String banana  = parts[0];
-				String milk    = parts[1];
-				String tomato  = parts[2];
-				String seqId   = parts[3];
 
-				
+				String[] parts = msgToSend.split(",");
+				String banana = parts[0];
+				String milk = parts[1];
+				String tomato = parts[2];
+				String seqId = parts[3];
+
 				msgToSend = banana + "," + milk + "," + tomato;
-				
-				//sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(msgToSend), Constants.CLIENT_MULTICAST_ADDRESS,
-				//		Constants.CLIENT_MULTICAST_PORT);
-				
+
+				// sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(msgToSend),
+				// Constants.CLIENT_MULTICAST_ADDRESS,
+				// Constants.CLIENT_MULTICAST_PORT);
+
 				System.out.println("Timer fertig: " + FifoDeliver.assigneSequenceId(msgToSend));
 				mProductTimer.cancel();
 				if (server.quotationList.containsKey(socket.getLocalAddress().getHostAddress())) {
@@ -94,7 +94,7 @@ public class ClientMessageHandler implements Runnable {
 				int bananaDb = Integer.parseInt(splitedDb[0]);
 				int milkDb = Integer.parseInt(splitedDb[1]);
 				int tomatoDb = Integer.parseInt(splitedDb[2]);
-                String actualData=bananaDb+","+milkDb+","+tomatoDb;
+				String actualData = bananaDb + "," + milkDb + "," + tomatoDb;
 				String reservationMsg = (bananaDb - bananaReq) + "," + (milkDb - milkReq) + ","
 						+ (tomatoDb - tomateReq);
 				if (bananaReq > 0) {
@@ -104,10 +104,10 @@ public class ClientMessageHandler implements Runnable {
 							reservationMsg = (bananaDb - bananaReq - 3) + "," + (milkDb - milkReq) + ","
 									+ (tomatoDb - tomateReq - 3);
 							int quantity = bananaReq + 3;
-							
+
 							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
 									"3,t:" + quantity + ",b");
-							
+
 							System.out.println("QQQQQQQbanana size: " + this.server.quotationList.size());
 
 							sender.sendTCPMessage("banana,reservation,OK," + quantity + ",tomato,reservation2,OK,3",
@@ -121,14 +121,14 @@ public class ClientMessageHandler implements Runnable {
 
 						}
 						System.out.println("KOMMT REIN- " + reservationMsg);
-						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+						reservationMsg = FifoDeliver.assigneSequenceId(reservationMsg);
 
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
 						System.out.println("+++++reservationMsg: " + reservationMsg);
 						System.out.println("+++++actualData: " + actualData);
 
-						this.updateSequenceNumber(reservationMsg,actualData);
+						this.updateSequenceNumber(reservationMsg, actualData);
 
 						lockProductTimer();
 
@@ -155,10 +155,10 @@ public class ClientMessageHandler implements Runnable {
 							sender.sendTCPMessage("tomato,reservation,OK", this.socket);
 
 						}
-						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+						reservationMsg = FifoDeliver.assigneSequenceId(reservationMsg);
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
-						this.updateSequenceNumber(reservationMsg,actualData);
+						this.updateSequenceNumber(reservationMsg, actualData);
 						lockProductTimer();
 
 					} else {
@@ -183,10 +183,10 @@ public class ClientMessageHandler implements Runnable {
 									+ (tomatoDb - tomateReq - 2);
 
 						}
-						reservationMsg=FifoDeliver.assigneSequenceId(reservationMsg);
+						reservationMsg = FifoDeliver.assigneSequenceId(reservationMsg);
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
-						this.updateSequenceNumber(reservationMsg,actualData);
+						this.updateSequenceNumber(reservationMsg, actualData);
 
 						lockProductTimer();
 					} else {
@@ -204,13 +204,13 @@ public class ClientMessageHandler implements Runnable {
 					mProductTimer.cancel();
 					System.out.println("Product timer canceled");
 				}
-				
+
 				String answer = null;
 				String[] splitedReq = inputMsg.split(",");
 				int bananaReq = Integer.parseInt(splitedReq[1]);
 				int milkReq = Integer.parseInt(splitedReq[2]);
 				int tomatoReq = Integer.parseInt(splitedReq[3]);
-				
+
 				System.out.println("QQQQQQQ size: " + this.server.quotationList.size());
 
 				if (bananaReq > 0) {
@@ -221,15 +221,13 @@ public class ClientMessageHandler implements Runnable {
 					answer = "responseOrder,OK,tomato," + tomatoReq;
 				}
 				if (this.server.quotationList.containsKey(this.socket.getLocalAddress().getHostAddress())) {
-					
-					System.out.println("----inputMSG:  " +this.server.quotationList);
 
-					
+					System.out.println("----inputMSG:  " + this.server.quotationList);
+
 					String quotationAsString = this.server.quotationList
 							.get(this.socket.getLocalAddress().getHostAddress());
-					
 
-					String gift  = quotationAsString.split(":")[0];
+					String gift = quotationAsString.split(":")[0];
 					String toBuy = quotationAsString.split(":")[1];
 
 					// "2,t:"+quantity+",m"
@@ -274,8 +272,6 @@ public class ClientMessageHandler implements Runnable {
 
 					System.out.println("input: " + this.inputMsg + " lock " + mProductTimer);
 
-					
-
 					String msgToSend = ProductDb.getCurrentData();
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 							Constants.CLIENT_MULTICAST_PORT);
@@ -283,7 +279,7 @@ public class ClientMessageHandler implements Runnable {
 					StringBuilder sb = new StringBuilder();
 					sb.append(Constants.UPDATE_REPLICA);
 					sb.append(",");
-					sb.append(ProductDb.getCurrentData());
+					sb.append(msgToSend);
 					this.updateReplicats(sb.toString());
 				} else {
 					sender.sendTCPMessage("responseOrder,NOK", this.socket);
@@ -298,13 +294,23 @@ public class ClientMessageHandler implements Runnable {
 		}
 	}
 
-	private void updateSequenceNumber(String reservationMsg,String data) {
-		String seq = reservationMsg.split(",")[reservationMsg.split(",").length-1];
+	private void updateSequenceNumber(String reservationMsg, String data) {
+		String seq = reservationMsg.split(",")[reservationMsg.split(",").length - 1];
 		System.out.println("+++++Data: " + data);
 		System.out.println("+++++SEQ: " + seq);
-
-		ProductDb.updateReplicaProductDb(data+","+seq);
+        String msg = "Updateseq,"+data + "," + seq;
+		ProductDb.overrideProductDb(msg);
+		try {
+			this.updateReplicats(msg);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
+
 	private void updateReplicats(String message) throws ClassNotFoundException, IOException {
 		for (Properties p : this.server.getMulticastReceiver().getKnownHosts().values()) {
 			String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();

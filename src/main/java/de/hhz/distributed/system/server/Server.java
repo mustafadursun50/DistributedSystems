@@ -211,7 +211,7 @@ public class Server implements Runnable {
 					this.mSocket.close();
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
 					System.out.println("save update " + input);
-					ProductDb.updateReplicaProductDb(input);
+					ProductDb.overrideProductDb(input);
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("Put msg to queue" + input);
