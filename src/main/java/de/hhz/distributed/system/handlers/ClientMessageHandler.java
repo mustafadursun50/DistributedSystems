@@ -43,7 +43,6 @@ public class ClientMessageHandler implements Runnable {
 
 			} else if (inputMsg.startsWith("reserve")) {
 				// Multicast an Gruppe mit ( "bananaLock" )
-				System.out.println("IN RESERVE");
 				
 				String[] order = inputMsg.split(",");
 				int bananaReq = Integer.parseInt(order[1]);
@@ -69,7 +68,6 @@ public class ClientMessageHandler implements Runnable {
 							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
 									"3,t:" + quantity + ",b");
 
-							System.out.println("QQQQQQQbanana size: " + this.server.quotationList.size());
 
 							sender.sendTCPMessage("banana,reservation,OK," + quantity + ",tomato,reservation2,OK,3",
 									this.socket);
@@ -81,13 +79,11 @@ public class ClientMessageHandler implements Runnable {
 							sender.sendTCPMessage("banana,reservation,OK", this.socket);
 
 						}
-						System.out.println("KOMMT REIN- " + reservationMsg);
 						reservationMsg = FifoDeliver.assigneSequenceId(reservationMsg);
 
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
-						System.out.println("+++++reservationMsg: " + reservationMsg);
-						System.out.println("+++++actualData: " + actualData);
+
 
 						this.updateSequenceNumber(reservationMsg, actualData); 
 
@@ -166,7 +162,6 @@ public class ClientMessageHandler implements Runnable {
 				int milkReq = Integer.parseInt(splitedReq[2]);
 				int tomatoReq = Integer.parseInt(splitedReq[3]);
 
-				System.out.println("QQQQQQQ size: " + this.server.quotationList.size());
 
 				if (bananaReq > 0) {
 					answer = "responseOrder,OK,banana," + bananaReq;
@@ -177,7 +172,6 @@ public class ClientMessageHandler implements Runnable {
 				}
 				if (this.server.quotationList.containsKey(this.socket.getLocalAddress().getHostAddress())) {
 
-					System.out.println("----inputMSG:  " + this.server.quotationList);
 
 					String quotationAsString = this.server.quotationList.get(this.socket.getLocalAddress().getHostAddress());
 					String gift = quotationAsString.split(":")[0];
@@ -215,7 +209,6 @@ public class ClientMessageHandler implements Runnable {
 					}
 
 					this.inputMsg = "requestOrder," + bananaReq + "," + milkReq + "," + tomatoReq;
-					System.out.println("---------requestOrder," + bananaReq + "," + milkReq + "," + tomatoReq);
 					server.quotationList.remove(socket.getLocalAddress().getHostAddress());
 				}
 
@@ -247,11 +240,9 @@ public class ClientMessageHandler implements Runnable {
 	}
 
 	private void updateSequenceNumber(String reservationMsg, String data) {
-		System.out.println("+++++reservationMsg: " 	+ reservationMsg);
-		System.out.println("+++++data: " 	+ data);
+
 		String seq = reservationMsg.split(",")[reservationMsg.split(",").length - 1];
-		System.out.println("+++++Data: " 	+ data);
-		System.out.println("+++++SEQ: " 	+ seq);
+
         String msg = "Updateseq,"+data + "," + seq ;
 		ProductDb.overrideProductDb(msg);
 		try {
