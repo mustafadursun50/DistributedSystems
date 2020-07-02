@@ -17,6 +17,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.hhz.distributed.system.Utils.MessageQueue;
+import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
 import de.hhz.distributed.system.db.ProductDb;
@@ -38,6 +39,8 @@ public class Server implements Runnable {
 	private Sender sender;
 	private Queue<MessageQueue> messageQueue;
 	public Map<String, String> quotationList = new HashMap<String, String>();
+	private Timer mProductTimer;
+	private TimerTask mProductTimerTask;
 
 	public Server(final int port) throws IOException, ClassNotFoundException {
 		messageQueue = new LinkedList<MessageQueue>();
@@ -305,4 +308,44 @@ public class Server implements Runnable {
 	public void setElectionRunning(boolean isElectionRunning) {
 		this.isElectionRunning = isElectionRunning;
 	}
+
+	public void startReservationTimer(String address) {
+		if (mProductTimer != null) {
+			mProductTimer.cancel();
+			System.out.println("ProductTimer canceld");
+		}
+
+		mProductTimerTask = new TimerTask() {
+
+			@Override
+			public void run() {
+				String msgToSend = ProductDb.getCurrentData();
+
+				String[] parts = msgToSend.split(",");
+				String banana = parts[0];
+				String milk = parts[1];
+				String tomato = parts[2];
+				String seqId = parts[3];
+
+				msgToSend = banana + "," + milk + "," + tomato;
+				sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(msgToSend),
+						Constants.CLIENT_MULTICAST_ADDRESS, Constants.CLIENT_MULTICAST_PORT);
+				mProductTimer.cancel();
+				if (quotationList.containsKey(address)) {
+					quotationList.remove(address);
+				}
+			}
+		};
+		mProductTimer = new Timer();
+		mProductTimer.schedule(mProductTimerTask, 10000);
+		System.out.println("mProductTimer: " + mProductTimer);
+
+	}
+
+	public void cancelReservationTimer() {
+		if (this.mProductTimer != null) {
+			this.mProductTimer.cancel();
+		}
+	}
+
 }

@@ -20,8 +20,7 @@ public class ClientMessageHandler implements Runnable {
 	private FifoDeliver fifoDeliver;
 	private Socket socket;
 	private Server server;
-	Timer mProductTimer;
-	private TimerTask timerTask;
+
 
 	public ClientMessageHandler(String input, Socket socket, Server server) {
 		this.inputMsg = input;
@@ -31,43 +30,7 @@ public class ClientMessageHandler implements Runnable {
 		this.server = server;
 	}
 
-	private void lockProductTimer() {
-		if (mProductTimer != null) {
-			mProductTimer.cancel();
-			System.out.println("ProductTimer canceld");
-		}
-
-		timerTask = new TimerTask() {
-
-			@Override
-			public void run() {
-				String msgToSend = ProductDb.getCurrentData();
-
-				String[] parts = msgToSend.split(",");
-				String banana = parts[0];
-				String milk = parts[1];
-				String tomato = parts[2];
-				String seqId = parts[3];
-
-				msgToSend = banana + "," + milk + "," + tomato;
-
-				// sender.sendMultiCastMessage(FifoDeliver.assigneSequenceId(msgToSend),
-				// Constants.CLIENT_MULTICAST_ADDRESS,
-				// Constants.CLIENT_MULTICAST_PORT);
-
-				System.out.println("Timer fertig: " + FifoDeliver.assigneSequenceId(msgToSend));
-				mProductTimer.cancel();
-				if (server.quotationList.containsKey(socket.getLocalAddress().getHostAddress())) {
-					server.quotationList.remove(socket.getLocalAddress().getHostAddress());
-				}
-			}
-		};
-		mProductTimer = new Timer();
-		mProductTimer.schedule(timerTask, 10000);
-		System.out.println("mProductTimer: " + mProductTimer);
-
-	}
-
+	
 	public void run() {
 		try {
 			if (inputMsg.startsWith(Constants.PACKAGE_LOSS)) {
@@ -81,9 +44,7 @@ public class ClientMessageHandler implements Runnable {
 			} else if (inputMsg.startsWith("reserve")) {
 				// Multicast an Gruppe mit ( "bananaLock" )
 				System.out.println("IN RESERVE");
-
-				System.out.println("mProductTimerAfter: " + mProductTimer);
-
+				
 				String[] order = inputMsg.split(",");
 				int bananaReq = Integer.parseInt(order[1]);
 				int milkReq = Integer.parseInt(order[2]);
@@ -130,7 +91,7 @@ public class ClientMessageHandler implements Runnable {
 
 						this.updateSequenceNumber(reservationMsg, actualData); 
 
-						lockProductTimer();
+						this.server.startReservationTimer(this.socket.getLocalAddress().getHostAddress());
 
 					} else {
 						sender.sendTCPMessage("banana,reservation,NOK," + bananaDb, this.socket);
@@ -159,7 +120,7 @@ public class ClientMessageHandler implements Runnable {
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
 						this.updateSequenceNumber(reservationMsg, actualData);
-						lockProductTimer();
+						this.server.startReservationTimer(this.socket.getLocalAddress().getHostAddress());
 
 					} else {
 						sender.sendTCPMessage("tomato,reservation,NOK," + tomatoDb, this.socket);
@@ -188,7 +149,7 @@ public class ClientMessageHandler implements Runnable {
 								Constants.CLIENT_MULTICAST_PORT);
 						this.updateSequenceNumber(reservationMsg, actualData);
 
-						lockProductTimer();
+						this.server.startReservationTimer(this.socket.getLocalAddress().getHostAddress());
 					} else {
 						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
 					}
@@ -197,11 +158,7 @@ public class ClientMessageHandler implements Runnable {
 
 			else if (inputMsg.startsWith("requestOrder")) {
 
-				System.out.println("mProducTimer: " + mProductTimer);
-				if ((mProductTimer != null)) {
-					mProductTimer.cancel();
-					System.out.println("Product timer canceled");
-				}
+				this.server.cancelReservationTimer();
 
 				String answer = null;
 				String[] splitedReq = inputMsg.split(",");
@@ -266,7 +223,6 @@ public class ClientMessageHandler implements Runnable {
 					sender.sendTCPMessage(answer, this.socket);
 					Thread.sleep(100);
 
-					System.out.println("input: " + this.inputMsg + " lock " + mProductTimer);
 
 					String msgToSend = ProductDb.getCurrentData();
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
