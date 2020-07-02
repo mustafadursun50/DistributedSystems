@@ -128,7 +128,7 @@ public class ClientMessageHandler implements Runnable {
 						System.out.println("+++++reservationMsg: " + reservationMsg);
 						System.out.println("+++++actualData: " + actualData);
 
-						this.updateSequenceNumber(reservationMsg, actualData);
+						this.updateSequenceNumber(reservationMsg, actualData); 
 
 						lockProductTimer();
 
@@ -192,9 +192,7 @@ public class ClientMessageHandler implements Runnable {
 					} else {
 						sender.sendTCPMessage("milk,reservation,NOK," + milkDb, this.socket);
 					}
-
 				}
-
 			}
 
 			else if (inputMsg.startsWith("requestOrder")) {
@@ -224,9 +222,7 @@ public class ClientMessageHandler implements Runnable {
 
 					System.out.println("----inputMSG:  " + this.server.quotationList);
 
-					String quotationAsString = this.server.quotationList
-							.get(this.socket.getLocalAddress().getHostAddress());
-
+					String quotationAsString = this.server.quotationList.get(this.socket.getLocalAddress().getHostAddress());
 					String gift = quotationAsString.split(":")[0];
 					String toBuy = quotationAsString.split(":")[1];
 
@@ -295,10 +291,12 @@ public class ClientMessageHandler implements Runnable {
 	}
 
 	private void updateSequenceNumber(String reservationMsg, String data) {
+		System.out.println("+++++reservationMsg: " 	+ reservationMsg);
+		System.out.println("+++++data: " 	+ data);
 		String seq = reservationMsg.split(",")[reservationMsg.split(",").length - 1];
-		System.out.println("+++++Data: " + data);
-		System.out.println("+++++SEQ: " + seq);
-        String msg = "Updateseq,"+data + "," + seq;
+		System.out.println("+++++Data: " 	+ data);
+		System.out.println("+++++SEQ: " 	+ seq);
+        String msg = "Updateseq,"+data + "," + seq ;
 		ProductDb.overrideProductDb(msg);
 		try {
 			this.updateReplicats(msg);

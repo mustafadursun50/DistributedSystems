@@ -18,10 +18,22 @@ public class FifoDeliver {
 			System.out.println("p: " + productAsString);
 
 			sequenceNo = Long.parseLong(productAsString.split(",")[productAsString.split(",").length -1]);
+
+
 		}
+		String productAsString = ProductDb.getCurrentData();
+		System.out.println("productAsString: " + productAsString + "productDataSPlit" + productAsString.split(","));
+		System.out.println("p: " + productAsString);
+
+		sequenceNo = Long.parseLong(productAsString.split(",")[productAsString.split(",").length -1]);
+
+		
 		deliveryQueue.put(++sequenceNo, data);
+		System.out.println("--------seqNo--------: "+ sequenceNo +"------data-----: " + data);
+
 		String dbWithSeqId = deliveryQueue.get(sequenceNo) + "," + sequenceNo;
 		System.out.println("dbWithSeqId: "+ dbWithSeqId);
+
 		return dbWithSeqId;
 	}
 
