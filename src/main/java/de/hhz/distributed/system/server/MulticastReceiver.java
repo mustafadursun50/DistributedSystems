@@ -44,7 +44,7 @@ public class MulticastReceiver implements Runnable {
 		return this.getKnownHosts().get(uid);
 	}
 
-	public Map<String, Properties> getKnownHosts() {
+	public synchronized Map<String, Properties> getKnownHosts() {
 		return this.knownHosts;
 	}
 

@@ -35,7 +35,7 @@ public class ProductDb {
 		}
 	}
 
-	public static boolean updateProductDb(String dataReq) {
+	public synchronized static boolean updateProductDb(String dataReq) {
 		boolean updateSuccessful = false;
 		System.out.println("Update database with " + dataReq);
 		try {
@@ -90,7 +90,7 @@ public class ProductDb {
 		return updateSuccessful;
 	}
 
-	public static boolean overrideProductDb(String dataReq) {
+	public synchronized static boolean overrideProductDb(String dataReq) {
 		boolean updateSuccessful = false;
 		System.out.println("overrideProductDb(): " + dataReq);
 		try {
@@ -118,13 +118,14 @@ public class ProductDb {
 		}
 		return updateSuccessful;
 	}
-	public static String getCurrentData() {
+	public synchronized static String getCurrentData() {
 		try {
 			return Files.readAllLines(Paths.get(Constants.PRODUCT_DB_NAME)).get(0);
 		} catch (FileNotFoundException e) {
+			System.err.println(e.getMessage());
 			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			System.err.println(e.getMessage());
 		}
 		return "";
 	}

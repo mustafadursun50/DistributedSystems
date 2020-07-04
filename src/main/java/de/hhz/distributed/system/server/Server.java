@@ -17,6 +17,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import de.hhz.distributed.system.Utils.MessageQueue;
+import de.hhz.distributed.system.Utils.ServerUtils;
 import de.hhz.distributed.system.algo.FifoDeliver;
 import de.hhz.distributed.system.algo.LeadElector;
 import de.hhz.distributed.system.app.Constants;
@@ -62,6 +63,7 @@ public class Server implements Runnable {
 	 * Leader send ping to replicas and say's i am here.
 	 */
 	public void doPing() {
+		Map<String, Integer> pingErrors = new HashMap<String, Integer>();
 		Runnable runnable = new Runnable() {
 			public void run() {
 				try {
@@ -93,10 +95,39 @@ public class Server implements Runnable {
 					}
 					// ping replicates
 					else if (isLeader()) {
-						for (Properties p : mMulticastReceiver.getKnownHosts().values()) {
-							String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
-							int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
-							String answer = sender.sendAndReceiveTCPMessage(Constants.PING_REPLICA, host, hostPort);
+						Map<String, Properties> hostList = mMulticastReceiver.getKnownHosts();
+						synchronized (hostList.values()) {
+							for (Properties p : hostList.values()) {
+								String host = p.get(Constants.PROPERTY_HOST_ADDRESS).toString();
+								int hostPort = Integer.parseInt(p.get(Constants.PROPERTY_HOST_PORT).toString());
+								String answer = sender.sendAndReceiveTCPMessage(Constants.PING_REPLICA, host, hostPort);
+								if (answer != null) {
+									if (pingErrors.containsKey(host)) {
+										pingErrors.remove(host);
+									}
+//								System.out.println("ping replica ok " + hostPort);
+								} else {
+									int counter = 0;
+									String key = ServerUtils.getKey(mMulticastReceiver.getKnownHosts(), p);
+									if (pingErrors.containsKey(key)) {
+										counter = pingErrors.get(key);
+									}
+									System.out.println("ping replica nok " + hostPort);
+
+									if (counter == 3) {
+										mMulticastReceiver.getKnownHosts().remove(key);
+										pingErrors.remove(key);
+										System.out.println("Replica " + key
+												+ " is not reachable. Send clean msg to other replicas");
+										updateReplicats(Constants.CLEAN_REPLICATE + ":" + key);
+									} else {
+										pingErrors.remove(key);
+										counter++;
+										pingErrors.put(key, counter);
+									}
+
+								}
+							}
 						}
 					}
 				} catch (Exception e) {
@@ -227,6 +258,9 @@ public class Server implements Runnable {
 				} else if (input.startsWith(Constants.UPDATE_REPLICA)) {
 					System.out.println("save update " + input);
 					ProductDb.overrideProductDb(input);
+				} else if (input.startsWith(Constants.CLEAN_REPLICATE)) {
+					System.out.println("clean replicate");
+					this.cleanReplicate(input.split(":")[1]);
 				} else {
 					System.out.println("client connection accepted");
 					System.out.println("Put msg to queue" + input);
@@ -236,6 +270,13 @@ public class Server implements Runnable {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		}
+	}
+
+	private void cleanReplicate(String replicate) {
+		if (this.mMulticastReceiver.getKnownHosts().containsKey(replicate)) {
+			System.out.println("replicate " + replicate + " removed");
+			this.mMulticastReceiver.getKnownHosts().remove(replicate);
 		}
 	}
 
