@@ -39,7 +39,6 @@ public class ProductDb {
 		boolean updateSuccessful = false;
 		System.out.println("Update database with " + dataReq);
 		try {
-			System.out.println("incoming order request: " + dataReq);
 			String products = Files.readAllLines(Paths.get(Constants.PRODUCT_DB_NAME)).get(0);
 			String[] splitedDb = products.split(",");
 			int bananaDb = Integer.parseInt(splitedDb[0]);
@@ -63,12 +62,9 @@ public class ProductDb {
 				tomatoDb += -tomatoReq;
 				updateSuccessful = true;
 			}
-			System.out.println("FileDB: "+ fileDb);
 
 			String updatedDb = bananaDb + "," + milkDb + "," + tomatoDb;
 			
-			System.out.println("updatedDb: "+ updatedDb);
-
 			String msgToWrite = FifoDeliver.assigneSequenceId(updatedDb);
 			
 			System.out.println("msgToWrite: "+ msgToWrite);
@@ -83,7 +79,6 @@ public class ProductDb {
 			updateSuccessful = false;
 			e.printStackTrace();
 		} finally {
-			System.out.println("PW: " + pw);
 
 			pw.close();
 		}
@@ -96,7 +91,6 @@ public class ProductDb {
 		try {
 
 			String[] splitedReq = dataReq.split(",");
-			System.out.println("##### updateDB: start " +  dataReq);
 
 			int bananaReq = Integer.parseInt(splitedReq[1]);
 			int milkReq = Integer.parseInt(splitedReq[2]);
@@ -104,7 +98,6 @@ public class ProductDb {
 			int seq = Integer.parseInt(splitedReq[4]);
 			
 			String updatedDb = bananaReq + "," + milkReq + "," + tomatoReq+","+seq;
-			System.out.println("##### updateDB: "+ updatedDb);
 			pw = new PrintWriter(fileDb);
 			pw.println(updatedDb);
 		} catch (FileNotFoundException e) {

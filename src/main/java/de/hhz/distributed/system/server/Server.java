@@ -212,7 +212,10 @@ public class Server implements Runnable {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
+		System.out.println(this.host.getHostAddress()+" : start discovery");
+
 		this.mMulticastReceiver.sendMulticastMessage();
+		
 		try {
 			Thread.sleep(300);
 		} catch (InterruptedException e1) {
@@ -263,7 +266,6 @@ public class Server implements Runnable {
 					this.cleanReplicate(input.split(":")[1]);
 				} else {
 					System.out.println("client connection accepted");
-					System.out.println("Put msg to queue" + input);
 					this.messageQueue.add(new MessageQueue(this.mSocket, input));
 				}
 
@@ -353,7 +355,7 @@ public class Server implements Runnable {
 	public void startReservationTimer(String address) {
 		if (mProductTimer != null) {
 			mProductTimer.cancel();
-			System.out.println("ProductTimer canceld");
+			System.out.println("Reservation timer canceled");
 		}
 
 		mProductTimerTask = new TimerTask() {
@@ -379,7 +381,6 @@ public class Server implements Runnable {
 		};
 		mProductTimer = new Timer();
 		mProductTimer.schedule(mProductTimerTask, 10000);
-		System.out.println("mProductTimer: " + mProductTimer);
 
 	}
 
