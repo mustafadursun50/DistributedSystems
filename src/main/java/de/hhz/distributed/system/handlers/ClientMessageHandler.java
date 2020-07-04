@@ -58,6 +58,13 @@ public class ClientMessageHandler implements Runnable {
 				String reservationMsg = (bananaDb - bananaReq) + "," + (milkDb - milkReq) + ","
 						+ (tomatoDb - tomateReq);
 				if (bananaReq > 0) {
+					for (String reservation : this.server.quotationList.values()) {
+						String[] reservedProductArr = reservation.split(",");
+						if (reservedProductArr[reservedProductArr.length - 1].equals("b")) {
+							sender.sendTCPMessage("banana,reservation,NOK," + 0, this.socket);
+							return;
+						}
+					}
 					// Reserver banana
 					if (bananaDb >= bananaReq) {
 						if (bananaReq + 3 <= bananaDb) {
@@ -94,6 +101,13 @@ public class ClientMessageHandler implements Runnable {
 					}
 
 				} else if (tomateReq > 0) {
+					for (String reservation : this.server.quotationList.values()) {
+						String[] reservedProductArr = reservation.split(",");
+						if (reservedProductArr[reservedProductArr.length - 1].equals("t")) {
+							sender.sendTCPMessage("banana,reservation,NOK," + 0, this.socket);
+							return;
+						}
+					}
 					// Reserver tomato
 					if (tomateReq <= tomatoDb) {
 						if (tomateReq + 1 <= tomatoDb) {
@@ -124,6 +138,13 @@ public class ClientMessageHandler implements Runnable {
 
 				} else if (milkReq > 0) {
 					// Reserve milk
+					for (String reservation : this.server.quotationList.values()) {
+						String[] reservedProductArr = reservation.split(",");
+						if (reservedProductArr[reservedProductArr.length - 1].equals("m")) {
+							sender.sendTCPMessage("banana,reservation,NOK," + 0, this.socket);
+							return;
+						}
+					}
 					if (milkReq <= milkDb) {
 						if (milkReq + 2 <= milkDb) {
 							int quantity = milkReq + 2;
