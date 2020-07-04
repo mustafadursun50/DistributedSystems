@@ -12,7 +12,6 @@ public class App {
 		ProductDb.initializeDb();
 		Thread.sleep(1000);
 		int port = -1;
-//		port = Integer.parseInt(System.getProperty("port"));
 		port = Integer.parseInt(args[0]);
 
 		if (port == -1) {
