@@ -21,7 +21,6 @@ public class ClientMessageHandler implements Runnable {
 	private Socket socket;
 	private Server server;
 
-
 	public ClientMessageHandler(String input, Socket socket, Server server) {
 		this.inputMsg = input;
 		this.sender = new Sender();
@@ -30,7 +29,6 @@ public class ClientMessageHandler implements Runnable {
 		this.server = server;
 	}
 
-	
 	public void run() {
 		try {
 			if (inputMsg.startsWith(Constants.PACKAGE_LOSS)) {
@@ -43,7 +41,7 @@ public class ClientMessageHandler implements Runnable {
 
 			} else if (inputMsg.startsWith("reserve")) {
 				// Multicast an Gruppe mit ( "bananaLock" )
-				
+
 				String[] order = inputMsg.split(",");
 				int bananaReq = Integer.parseInt(order[1]);
 				int milkReq = Integer.parseInt(order[2]);
@@ -75,7 +73,6 @@ public class ClientMessageHandler implements Runnable {
 							this.server.quotationList.put(this.socket.getLocalAddress().getHostAddress(),
 									"3,t:" + quantity + ",b");
 
-
 							sender.sendTCPMessage("banana,reservation,OK," + quantity + ",tomato,reservation2,OK,3",
 									this.socket);
 						} else {
@@ -91,8 +88,7 @@ public class ClientMessageHandler implements Runnable {
 						this.sender.sendMultiCastMessage(reservationMsg, Constants.CLIENT_MULTICAST_ADDRESS,
 								Constants.CLIENT_MULTICAST_PORT);
 
-
-						this.updateSequenceNumber(reservationMsg, actualData); 
+						this.updateSequenceNumber(reservationMsg, actualData);
 
 						this.server.startReservationTimer(this.socket.getLocalAddress().getHostAddress());
 
@@ -183,7 +179,6 @@ public class ClientMessageHandler implements Runnable {
 				int milkReq = Integer.parseInt(splitedReq[2]);
 				int tomatoReq = Integer.parseInt(splitedReq[3]);
 
-
 				if (bananaReq > 0) {
 					answer = "responseOrder,OK,banana," + bananaReq;
 				} else if (milkReq > 0) {
@@ -193,8 +188,8 @@ public class ClientMessageHandler implements Runnable {
 				}
 				if (this.server.quotationList.containsKey(this.socket.getLocalAddress().getHostAddress())) {
 
-
-					String quotationAsString = this.server.quotationList.get(this.socket.getLocalAddress().getHostAddress());
+					String quotationAsString = this.server.quotationList
+							.get(this.socket.getLocalAddress().getHostAddress());
 					String gift = quotationAsString.split(":")[0];
 					String toBuy = quotationAsString.split(":")[1];
 
@@ -237,7 +232,6 @@ public class ClientMessageHandler implements Runnable {
 					sender.sendTCPMessage(answer, this.socket);
 					Thread.sleep(100);
 
-
 					String msgToSend = ProductDb.getCurrentData();
 					this.sender.sendMultiCastMessage(msgToSend, Constants.CLIENT_MULTICAST_ADDRESS,
 							Constants.CLIENT_MULTICAST_PORT);
@@ -264,7 +258,7 @@ public class ClientMessageHandler implements Runnable {
 
 		String seq = reservationMsg.split(",")[reservationMsg.split(",").length - 1];
 
-        String msg = "Updateseq,"+data + "," + seq ;
+		String msg = Constants.UPDATE_REPLICA + "," + data + "," + seq;
 		ProductDb.overrideProductDb(msg);
 		try {
 			this.updateReplicats(msg);
