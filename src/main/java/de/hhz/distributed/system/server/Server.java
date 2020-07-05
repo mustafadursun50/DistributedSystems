@@ -5,11 +5,13 @@ import java.io.ObjectInputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Executors;
@@ -38,7 +40,7 @@ public class Server implements Runnable {
 	int permanentUpdatedInterval;
 	int pingErrorCounter;
 	private Sender sender;
-	private Queue<MessageQueue> messageQueue;
+	private  List<MessageQueue> messageQueue;
 	public Map<String, String> quotationList = new HashMap<String, String>();
 	private Timer mProductTimer;
 	private TimerTask mProductTimerTask;
@@ -159,13 +161,14 @@ public class Server implements Runnable {
 			@Override
 			public void run() {
 				if (!messageQueue.isEmpty()) {
-					MessageQueue message = messageQueue.peek();
-					messageQueue.remove(message);
-					System.out.println("Proceed message: " + message.getMessage());
-					new Thread(new ClientMessageHandler(message.getMessage(), message.getSocket(), Server.this))
-							.start();
-				} else {
-					// System.out.println("Queue is empty");
+
+					MessageQueue nextMessage = getNextMessages();
+					if (nextMessage != null) {
+						messageQueue.remove(nextMessage);
+						System.out.println("Proceed message: " + nextMessage.getMessage());
+						new Thread(new ClientMessageHandler(nextMessage.getMessage(), nextMessage.getSocket(),
+								Server.this)).start();
+					}
 				}
 			}
 		};
@@ -212,10 +215,10 @@ public class Server implements Runnable {
 		} catch (InterruptedException e1) {
 			e1.printStackTrace();
 		}
-		System.out.println(this.host.getHostAddress()+" : start discovery");
+		System.out.println(this.host.getHostAddress() + " : start discovery");
 
 		this.mMulticastReceiver.sendMulticastMessage();
-		
+
 		try {
 			Thread.sleep(300);
 		} catch (InterruptedException e1) {
@@ -266,7 +269,9 @@ public class Server implements Runnable {
 					this.cleanReplicate(input.split(":")[1]);
 				} else {
 					System.out.println("client connection accepted");
-					this.messageQueue.add(new MessageQueue(this.mSocket, input));
+					String timestamp = input.split(",")[input.split(",").length-1];
+					timestamp = timestamp.split(":")[2];
+					this.messageQueue.add(new MessageQueue(this.mSocket, input, timestamp));
 				}
 
 			} catch (Exception e) {
@@ -388,6 +393,55 @@ public class Server implements Runnable {
 		if (this.mProductTimer != null) {
 			this.mProductTimer.cancel();
 		}
+	}
+
+	public MessageQueue getNextMessages() {
+		List<String> timestamps = new ArrayList<String>();
+		for (MessageQueue messageQueue : messageQueue) {
+			timestamps.add(messageQueue.getTimestamp());
+		}
+		Collections.sort(timestamps);
+		String nextTimestamp = timestamps.get(0);
+		MessageQueue nextMessage = null;
+		for (MessageQueue messageQueue : messageQueue) {
+			if (messageQueue.getMessage().endsWith(nextTimestamp)) {
+				nextMessage = messageQueue;
+				break;
+			}
+		}
+		return nextMessage;
+	}
+	
+	public static void main(String [] args) {
+//		ArrayList<String> arrlist = new ArrayList<String>();
+//	      arrlist.add("2reserve,0,0,1,2020-07-04T21:03:22.955Z");
+//	      arrlist.add("1reserve,0,0,1,2020-07-04T21:03:22.905Z");
+//	      arrlist.add("3reserve,0,0,1,2020-07-04T21:03:22.975Z");
+//			messageQueue= new LinkedList<MessageQueue>();
+//
+//	      for(String s:arrlist) {
+//	    	  String timestamp = s.split(",")[s.split(",").length-1];
+//				timestamp = timestamp.split(":")[2];
+//				messageQueue.add(new MessageQueue(null, s, timestamp));	
+//	      }
+//	      
+//	      List<String> timestamps = new ArrayList<String>();
+//			for (MessageQueue messageQueue : messageQueue) {
+//				timestamps.add(messageQueue.getTimestamp());
+//			}
+//			System.out.println(timestamps);
+//			Collections.sort(timestamps);
+//			System.out.println(timestamps);
+//			String nextTimestamp = timestamps.get(0);
+//			System.out.println(nextTimestamp);
+//			MessageQueue nextMessage = null;
+//			for (MessageQueue messageQueue : messageQueue) {
+//				if (messageQueue.getMessage().endsWith(nextTimestamp)) {
+//					nextMessage = messageQueue;
+//					break;
+//				}
+//			}
+//			System.out.println(nextMessage.getMessage());
 	}
 
 }
