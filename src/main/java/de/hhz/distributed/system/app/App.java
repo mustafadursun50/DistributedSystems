@@ -12,7 +12,7 @@ public class App {
 		ProductDb.initializeDb();
 		Thread.sleep(1000);
 		int port = -1;
-		port = Integer.parseInt(args[0]);
+		port = Integer.parseInt(System.getProperty("port"));
 
 		if (port == -1) {
 			System.out.println("port is required");
